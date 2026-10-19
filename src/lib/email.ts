@@ -1,9 +1,13 @@
 import emailjs from '@emailjs/browser';
 import { Order } from '../store/orderStore';
 
-const SERVICE_ID = (import.meta.env.VITE_EMAILJS_SERVICE_ID || '').trim();
-const TEMPLATE_ID = (import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '').trim();
-const PUBLIC_KEY = (import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '').trim();
+const DEFAULT_SERVICE_ID = 'service_5vkipba';
+const DEFAULT_TEMPLATE_ID = 'template_mzj560a';
+const DEFAULT_PUBLIC_KEY = '8vxleu_VFyVWnQTJ-';
+
+const SERVICE_ID = (import.meta.env.VITE_EMAILJS_SERVICE_ID || DEFAULT_SERVICE_ID).trim();
+const TEMPLATE_ID = (import.meta.env.VITE_EMAILJS_TEMPLATE_ID || DEFAULT_TEMPLATE_ID).trim();
+const PUBLIC_KEY = (import.meta.env.VITE_EMAILJS_PUBLIC_KEY || DEFAULT_PUBLIC_KEY).trim();
 
 export const isEmailConfigured = () =>
   Boolean(

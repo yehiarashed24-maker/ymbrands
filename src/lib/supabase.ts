@@ -2,11 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { Order, OrderStatus } from '../store/orderStore';
 import { Product } from '../types/product';
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const DEFAULT_SUPABASE_URL = 'https://pyjziyapuqamwhfyhvra.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_2zQDzMTStth2xuvRDbZzwg_L4Lx2yIG';
+
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
 const supabaseKey = (
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  ''
+  DEFAULT_SUPABASE_KEY
 ).trim();
 
 export const isSupabaseConfigured = (): boolean => {
@@ -246,6 +249,21 @@ export const deleteProductFromSupabase = async (id: number): Promise<boolean> =>
   }
 };
 
+export const purgeAllProductsFromSupabase = async (): Promise<boolean> => {
+  if (!supabase || !isSupabaseConfigured()) return false;
+  try {
+    const { error } = await supabase.from(PRODUCTS_TABLE).delete().neq('id', -999999);
+    if (error) {
+      console.warn('[Supabase] Failed to purge all products:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[Supabase] Error purging all products from Supabase:', err);
+    return false;
+  }
+};
+
 export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => {
   if (!supabase || !isSupabaseConfigured()) return null;
   try {
@@ -254,7 +272,12 @@ export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => 
       .select('*')
       .order('id', { ascending: false });
 
-    if (error || !data || data.length === 0) return null;
+    if (error) {
+      console.warn('[Supabase] Error fetching products:', error.message);
+      return null;
+    }
+
+    if (!data) return [];
 
     return data.map((row: any) => ({
       id: Number(row.id),

@@ -5,6 +5,7 @@ import { products as defaultProducts } from '../data/products';
 import {
   saveProductToSupabase,
   deleteProductFromSupabase,
+  purgeAllProductsFromSupabase,
   fetchProductsFromSupabase,
   subscribeToProductsFromSupabase,
   isSupabaseConfigured,
@@ -18,7 +19,7 @@ interface ProductStore {
   toggleStock: (id: number) => Promise<void>;
   toggleFeatured: (id: number) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
-  clearAllProducts: () => void;
+  clearAllProducts: () => Promise<void>;
   importProducts: (products: Product[]) => Promise<void>;
   resetToDefault: () => void;
   seedSportsCatalog: () => Promise<void>;
@@ -99,12 +100,19 @@ export const useProductStore = create<ProductStore>()(
         }
       },
 
-      clearAllProducts: () => {
+      clearAllProducts: async () => {
         set({ products: [] });
         try {
-          localStorage.removeItem('ym-products-storage');
+          localStorage.removeItem('ym-products-storage-v3');
         } catch {
           // ignore
+        }
+        if (isSupabaseConfigured()) {
+          try {
+            await purgeAllProductsFromSupabase();
+          } catch (e) {
+            console.warn('[Supabase] Error purging all products from cloud:', e);
+          }
         }
       },
 
@@ -141,15 +149,11 @@ export const useProductStore = create<ProductStore>()(
         set({ isLoadingCloud: true });
         try {
           const cloudProducts = await fetchProductsFromSupabase();
-          if (cloudProducts && cloudProducts.length > 0) {
+          if (cloudProducts !== null) {
+            // Cloud is authoritative source of truth!
+            // Updates all devices synchronously with exact state of Supabase
             set({ products: cloudProducts, isLoadingCloud: false });
           } else {
-            // First time connection: If Supabase table is empty, seed it automatically
-            const { products } = get();
-            const listToSeed = products.length > 0 ? products : defaultProducts;
-            for (const p of listToSeed) {
-              await saveProductToSupabase(p).catch(() => {});
-            }
             set({ isLoadingCloud: false });
           }
         } catch (e) {
@@ -159,14 +163,14 @@ export const useProductStore = create<ProductStore>()(
       },
 
       initProductSync: () => {
-        // 1. Initial Cloud Sync
+        // 1. Initial Cloud Sync on app boot
         get().syncWithCloud();
 
         // 2. Realtime listener: whenever any product is modified/deleted from anywhere, sync immediately
         if (!isSupabaseConfigured()) return () => {};
         return subscribeToProductsFromSupabase(async () => {
           const cloudProducts = await fetchProductsFromSupabase();
-          if (cloudProducts) {
+          if (cloudProducts !== null) {
             set({ products: cloudProducts });
           }
         });
@@ -178,4 +182,3 @@ export const useProductStore = create<ProductStore>()(
     }
   )
 );
-
