@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useOrderStore, OrderStatus, Order } from '../store/orderStore';
 import { useProductStore } from '../store/productStore';
 import { Product, ProductCategory } from '../types/product';
@@ -35,7 +35,10 @@ import {
   Filter,
   Layers,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Loader2,
+  Star,
+  Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -77,6 +80,265 @@ const ALL_SPORTS_CATEGORIES: { id: ProductCategory; label: string; icon: string 
   { id: 'Sportswear', label: 'Sportswear (ملابس وترنجات)', icon: '👕' },
   { id: 'Accessories', label: 'Accessories (إكسسوارات ومعدات)', icon: '🎒' },
 ];
+
+/**
+ * Compresses and resizes an image file from the user's laptop using HTML5 Canvas.
+ * Keeps aspect ratio, max 1200x1200px, quality 0.85 JPEG.
+ * Produces an ultra-crisp web image of ~70-150KB that saves quickly to Supabase.
+ */
+const compressImageFile = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    if (file.type === 'image/svg+xml') {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve((e.target?.result as string) || '');
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve((e.target?.result as string) || '');
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
+        } catch {
+          resolve((e.target?.result as string) || '');
+        }
+      };
+      img.onerror = () => resolve((e.target?.result as string) || '');
+      img.src = (e.target?.result as string) || '';
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+};
+
+interface ProductImageManagerProps {
+  images: string[];
+  onChange: (images: string[]) => void;
+  label?: string;
+}
+
+const ProductImageManager: React.FC<ProductImageManagerProps> = ({
+  images,
+  onChange,
+  label = 'Product Images / صور المنتج',
+}) => {
+  const [urlInput, setUrlInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsProcessing(true);
+    try {
+      const newImages: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        const compressed = await compressImageFile(file);
+        if (compressed) {
+          newImages.push(compressed);
+        }
+      }
+      if (newImages.length > 0) {
+        onChange([...images, ...newImages]);
+      }
+    } catch (e) {
+      console.error('Failed to process image files:', e);
+      alert('حدث خطأ أثناء قراءة الصور');
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAddUrl = () => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+    onChange([...images, trimmed]);
+    setUrlInput('');
+  };
+
+  const handleRemove = (idxToRemove: number) => {
+    onChange(images.filter((_, idx) => idx !== idxToRemove));
+  };
+
+  const handleSetPrimary = (idxToPromote: number) => {
+    if (idxToPromote === 0) return;
+    const promoted = images[idxToPromote];
+    const rest = images.filter((_, idx) => idx !== idxToPromote);
+    onChange([promoted, ...rest]);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="block text-xs font-bold text-slate-700">
+          {label} <span className="text-rose-500">*</span>
+        </label>
+        <span className="text-[11px] font-bold text-slate-500">
+          {images.length} {images.length === 1 ? 'صورة مضافة' : 'صور مضافة'}
+        </span>
+      </div>
+
+      {/* Upload Dropzone */}
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleFiles(e.dataTransfer.files);
+        }}
+        className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group ${
+          isProcessing
+            ? 'bg-slate-100 border-slate-300 pointer-events-none'
+            : 'border-slate-300 hover:border-ym-charcoal bg-slate-50 hover:bg-slate-100/80'
+        }`}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e) => handleFiles(e.target.files)}
+          multiple
+          accept="image/*"
+          className="hidden"
+        />
+
+        {isProcessing ? (
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 py-2">
+            <Loader2 className="w-5 h-5 animate-spin text-ym-charcoal" />
+            <span>جاري معالجة وضغط الصور من اللاب...</span>
+          </div>
+        ) : (
+          <>
+            <div className="w-10 h-10 rounded-2xl bg-white shadow-2xs border border-slate-200 flex items-center justify-center text-slate-600 group-hover:scale-110 group-hover:text-ym-charcoal transition-all">
+              <Upload className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-800">
+                اضغط لاختيار صور من جهازك أو اسحبها هنا (يدعم رفع عدة صور معاً)
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                PNG, JPG, WEBP (يتم تحسينها وضغطها تلقائياً لأعلى جودة وسرعة تصفح)
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Alternative Direct URL Input */}
+      <div className="flex items-center gap-2">
+        <input
+          type="url"
+          placeholder="أو أضف رابط صورة مباشر (https://...)"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAddUrl();
+            }
+          }}
+          className="flex-1 px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal"
+        />
+        <button
+          type="button"
+          onClick={handleAddUrl}
+          disabled={!urlInput.trim()}
+          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+        >
+          + إضافة الرابط
+        </button>
+      </div>
+
+      {/* Thumbnails Grid */}
+      {images.length > 0 ? (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              className={`relative group rounded-xl overflow-hidden bg-white border-2 aspect-square flex items-center justify-center ${
+                idx === 0 ? 'border-ym-charcoal ring-2 ring-ym-charcoal/20' : 'border-slate-200'
+              }`}
+            >
+              <img
+                src={img}
+                alt={`Product preview ${idx + 1}`}
+                className="w-full h-full object-contain p-1"
+              />
+
+              {/* Primary Label */}
+              {idx === 0 && (
+                <div className="absolute top-1 left-1 bg-black/85 text-ym-lime text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow flex items-center gap-1">
+                  <Star className="w-2.5 h-2.5 fill-ym-lime text-ym-lime" />
+                  <span>الرئيسية (الغلاف)</span>
+                </div>
+              )}
+
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                {idx !== 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleSetPrimary(idx)}
+                    className="px-2 py-0.5 bg-ym-lime hover:bg-lime-400 text-black text-[9px] font-black rounded cursor-pointer shadow flex items-center gap-1"
+                  >
+                    <Star className="w-2.5 h-2.5" />
+                    <span>اجعلها رئيسية</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(idx)}
+                  className="p-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full cursor-pointer shadow"
+                  title="حذف الصورة"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200/60 rounded-xl p-2.5 text-center font-medium">
+          ⚠️ يجب إضافة صورة واحدة على الأقل من جهازك أو عبر رابط لإظهار المنتج للزبائن
+        </p>
+      )}
+    </div>
+  );
+};
 
 export const AdminDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -165,6 +427,10 @@ export const AdminDashboard: React.FC = () => {
 
   // Edit Product Form State
   const [editForm, setEditForm] = useState(initialNewProdState);
+
+  // Uploaded & Managed Images State
+  const [newProdImages, setNewProdImages] = useState<string[]>([]);
+  const [editProdImages, setEditProdImages] = useState<string[]>([]);
 
   // 1. Verify Cryptographic Session Ticket on Mount
   useEffect(() => {
@@ -552,10 +818,15 @@ export const AdminDashboard: React.FC = () => {
   };
 
   // Create Product Handler
-  const handleCreateProduct = (e: React.FormEvent) => {
+  const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProd.nameEn || !newProd.image) {
-      alert('Please provide product English name and primary image URL.');
+    if (!newProd.nameEn) {
+      alert('Please provide product English name.');
+      return;
+    }
+
+    if (newProdImages.length === 0) {
+      alert('برجاء إضافة صورة واحدة على الأقل للمنتج (ارفعها من جهازك أو أضف رابط مباشر).');
       return;
     }
 
@@ -564,11 +835,6 @@ export const AdminDashboard: React.FC = () => {
       .map((s) => s.trim())
       .filter(Boolean)
       .map((s) => (isNaN(Number(s)) ? s : Number(s)));
-
-    const extraImages = newProd.images
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
 
     const generatedSlug =
       newProd.nameEn
@@ -589,8 +855,8 @@ export const AdminDashboard: React.FC = () => {
       gender: newProd.gender,
       price: Number(newProd.price),
       originalPrice: newProd.originalPrice ? Number(newProd.originalPrice) : undefined,
-      image: newProd.image.trim(),
-      images: [newProd.image.trim(), ...extraImages],
+      image: newProdImages[0],
+      images: newProdImages,
       sizes: sizesArr.length > 0 ? sizesArr : [40, 41, 42, 43, 44, 45],
       colors: [
         {
@@ -619,15 +885,18 @@ export const AdminDashboard: React.FC = () => {
       inStock: newProd.inStock,
     };
 
-    addProduct(createdProduct);
+    await addProduct(createdProduct);
     setShowAddProductModal(false);
     setNewProd(initialNewProdState);
-    alert('Product added successfully to live catalog!');
+    setNewProdImages([]);
+    alert('تمت إضافة المنتج بنجاح مع كافة الصور إلى المتجر والسحابة!');
   };
 
   // Open Edit Product Modal
   const openEditModal = (p: Product) => {
     setEditingProduct(p);
+    const existingImgs = p.images && p.images.length > 0 ? p.images : (p.image ? [p.image] : []);
+    setEditProdImages(existingImgs);
     setEditForm({
       nameEn: p.name.en,
       nameAr: p.name.ar,
@@ -638,7 +907,7 @@ export const AdminDashboard: React.FC = () => {
       price: p.price,
       originalPrice: p.originalPrice || p.price,
       image: p.image,
-      images: p.images.slice(1).join(', '),
+      images: existingImgs.slice(1).join(', '),
       sizes: p.sizes.join(', '),
       colorNameEn: p.colors[0]?.name.en || 'Original',
       colorNameAr: p.colors[0]?.name.ar || 'أصلي',
@@ -655,20 +924,20 @@ export const AdminDashboard: React.FC = () => {
   };
 
   // Save Edited Product
-  const handleSaveEditedProduct = (e: React.FormEvent) => {
+  const handleSaveEditedProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
+
+    if (editProdImages.length === 0) {
+      alert('برجاء إضافة صورة واحدة على الأقل للمنتج.');
+      return;
+    }
 
     const sizesArr = editForm.sizes
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
       .map((s) => (isNaN(Number(s)) ? s : Number(s)));
-
-    const extraImages = editForm.images
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
 
     const updated: Product = {
       ...editingProduct,
@@ -682,8 +951,8 @@ export const AdminDashboard: React.FC = () => {
       gender: editForm.gender,
       price: Number(editForm.price),
       originalPrice: editForm.originalPrice ? Number(editForm.originalPrice) : undefined,
-      image: editForm.image.trim(),
-      images: [editForm.image.trim(), ...extraImages],
+      image: editProdImages[0],
+      images: editProdImages,
       sizes: sizesArr.length > 0 ? sizesArr : editingProduct.sizes,
       colors: [
         {
@@ -705,10 +974,11 @@ export const AdminDashboard: React.FC = () => {
       inStock: editForm.inStock,
     };
 
-    updateProduct(editingProduct.id, updated);
+    await updateProduct(editingProduct.id, updated);
     setShowEditProductModal(false);
     setEditingProduct(null);
-    alert(`Product "${updated.name.en}" updated successfully!`);
+    setEditProdImages([]);
+    alert(`تم تحديث منتج "${updated.name.en}" بنجاح مع الصور الجديدة!`);
   };
 
   // Export Catalog JSON
@@ -1566,7 +1836,11 @@ export const AdminDashboard: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setShowAddProductModal(true)}
+                  onClick={() => {
+                    setNewProd(initialNewProdState);
+                    setNewProdImages([]);
+                    setShowAddProductModal(true);
+                  }}
                   className="px-5 py-2.5 bg-ym-charcoal hover:bg-black text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-md hover:scale-105 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-ym-lime" />
@@ -1624,7 +1898,11 @@ export const AdminDashboard: React.FC = () => {
                     <span>Seed Sports Catalog</span>
                   </button>
                   <button
-                    onClick={() => setShowAddProductModal(true)}
+                    onClick={() => {
+                      setNewProd(initialNewProdState);
+                      setNewProdImages([]);
+                      setShowAddProductModal(true);
+                    }}
                     className="px-6 py-3 bg-ym-charcoal hover:bg-black text-white rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-ym-lime" />
@@ -2014,23 +2292,11 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Primary Image URL (Direct PNG / JPG) *</label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://..."
-                    value={newProd.image}
-                    onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal"
-                  />
-                  {newProd.image && (
-                    <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                      <img src={newProd.image} alt="Preview" className="w-12 h-12 object-contain bg-white rounded-lg p-1 border" />
-                      <span className="text-xs text-slate-500 font-medium">Image Preview Ready</span>
-                    </div>
-                  )}
-                </div>
+                <ProductImageManager
+                  images={newProdImages}
+                  onChange={setNewProdImages}
+                  label="Product Images / صور المنتج (رفع من اللاب أو روابط)"
+                />
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -2237,22 +2503,11 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Primary Image URL</label>
-                  <input
-                    type="url"
-                    required
-                    value={editForm.image}
-                    onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal"
-                  />
-                  {editForm.image && (
-                    <div className="mt-2 flex items-center gap-3 p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                      <img src={editForm.image} alt="Preview" className="w-12 h-12 object-contain bg-white rounded-lg p-1 border" />
-                      <span className="text-xs text-slate-500 font-medium">Image Preview Ready</span>
-                    </div>
-                  )}
-                </div>
+                <ProductImageManager
+                  images={editProdImages}
+                  onChange={setEditProdImages}
+                  label="Product Images / صور المنتج (رفع من اللاب أو روابط)"
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Available Sizes (Comma separated)</label>
