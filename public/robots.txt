@@ -1,0 +1,14 @@
+# YM BRANDS Robots Configuration
+User-agent: *
+Disallow: /aaa
+Disallow: /ym-hq-ops-909
+Disallow: /admin
+Disallow: /api/
+Allow: /
+Allow: /shop
+Allow: /sourcing
+Allow: /faq
+Allow: /contact
+Allow: /reviews
+
+Sitemap: https://ymbrands.com/sitemap.xml

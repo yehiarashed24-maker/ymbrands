@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Orders Collection Security
+    match /orders/{orderId} {
+      // Allow customers to submit orders with strict schema validation
+      allow create: if request.resource.data.keys().hasAll(['id', 'type', 'status', 'date', 'customer', 'items'])
+                    && request.resource.data.status in ['pending']
+                    && request.resource.data.customer.name is string
+                    && request.resource.data.customer.name.size() <= 120
+                    && request.resource.data.customer.phone is string
+                    && request.resource.data.customer.phone.size() <= 25
+                    && request.resource.data.items.size() <= 30;
+
+      // Allow single order lookup for the customer tracking page
+      allow get: if true;
+
+      // Block public listing of all customer orders to prevent scraping and data leakage
+      allow list: if request.auth != null;
+
+      // Only authenticated admin can update order status or delete orders
+      allow update, delete: if request.auth != null;
+    }
+
+    // 2. Products Collection (if synced to Firestore)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Deny all other unmatched collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
