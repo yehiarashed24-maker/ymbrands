@@ -18,6 +18,7 @@ import { Contact } from './pages/Contact';
 import { AIAssistant } from './components/common/AIAssistant';
 import { LoadingScreen } from './components/common/LoadingScreen';
 import { useLanguageStore } from './store/languageStore';
+import { useProductStore } from './store/productStore';
 
 // Code-split AdminDashboard so its code is never downloaded by regular users
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -26,6 +27,14 @@ export const App: React.FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const { language } = useLanguageStore();
+
+  // Live Cloud Synchronization: Syncs products across all devices in real-time
+  useEffect(() => {
+    const unsubscribe = useProductStore.getState().initProductSync();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
   // Scroll to top on navigation
   useEffect(() => {

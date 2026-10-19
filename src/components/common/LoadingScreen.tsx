@@ -10,18 +10,36 @@ interface LoadingScreenProps {
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, forceShow = false }) => {
   const [isVisible, setIsVisible] = useState(() => {
     if (forceShow) return true;
-    const hasSeen = sessionStorage.getItem('ym_intro_seen');
-    return !hasSeen;
+    try {
+      const hasSeenSession = sessionStorage.getItem('ym_intro_seen');
+      const hasSeenLocal = localStorage.getItem('ym_intro_seen');
+      return !hasSeenSession && !hasSeenLocal;
+    } catch {
+      return false;
+    }
   });
 
   const [progress, setProgress] = useState(0);
 
+  const dismiss = () => {
+    try {
+      sessionStorage.setItem('ym_intro_seen', 'true');
+      localStorage.setItem('ym_intro_seen', 'true');
+    } catch {}
+    setIsVisible(false);
+    if (onComplete) onComplete();
+  };
+
   useEffect(() => {
     if (!isVisible) return;
 
-    // 60fps/120fps hardware-synced smooth progress ~1.6s
+    // Hard fallback safety timer: Force dismiss after max 1100ms so mobile can NEVER hang
+    const safetyTimer = setTimeout(() => {
+      dismiss();
+    }, 1100);
+
     const startTime = performance.now();
-    const duration = 1600;
+    const duration = 900; // Ultra-snappy 900ms animation
 
     let frameId: number;
     const tick = (now: number) => {
@@ -32,18 +50,17 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, forceS
       if (pct < 100) {
         frameId = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => {
-          sessionStorage.setItem('ym_intro_seen', 'true');
-          setIsVisible(false);
-          if (onComplete) onComplete();
-        }, 180);
+        setTimeout(dismiss, 100);
       }
     };
 
     frameId = requestAnimationFrame(tick);
 
-    return () => cancelAnimationFrame(frameId);
-  }, [isVisible, onComplete]);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(safetyTimer);
+    };
+  }, [isVisible]);
 
   return (
     <AnimatePresence>
@@ -52,10 +69,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, forceS
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            scale: 1.03,
-            transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+            scale: 1.02,
+            transition: { duration: 0.3, ease: 'easeOut' },
           }}
-          className="fixed inset-0 z-[9999] bg-[#07080B] text-white flex flex-col items-center justify-center p-6 select-none overflow-hidden"
+          onClick={dismiss}
+          className="fixed inset-0 z-[9999] bg-[#07080B] text-white flex flex-col items-center justify-center p-6 select-none overflow-hidden cursor-pointer"
         >
           {/* Subtle Ambient Background Neon Lighting */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">

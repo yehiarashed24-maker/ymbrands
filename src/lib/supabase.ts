@@ -286,3 +286,26 @@ export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => 
     return null;
   }
 };
+
+/**
+ * Realtime Subscription for Live Product Catalog Changes
+ */
+export const subscribeToProductsFromSupabase = (onProductsChange: () => void) => {
+  if (!supabase || !isSupabaseConfigured()) return () => {};
+
+  const channel = supabase
+    .channel('public:products_live')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: PRODUCTS_TABLE },
+      () => {
+        onProductsChange();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
+

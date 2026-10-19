@@ -6,52 +6,59 @@ import {
   saveProductToSupabase,
   deleteProductFromSupabase,
   fetchProductsFromSupabase,
+  subscribeToProductsFromSupabase,
   isSupabaseConfigured,
 } from '../lib/supabase';
 
 interface ProductStore {
   products: Product[];
-  addProduct: (product: Product) => void;
-  updateProduct: (id: number, product: Product) => void;
-  toggleStock: (id: number) => void;
-  toggleFeatured: (id: number) => void;
-  deleteProduct: (id: number) => void;
+  isLoadingCloud: boolean;
+  addProduct: (product: Product) => Promise<void>;
+  updateProduct: (id: number, product: Product) => Promise<void>;
+  toggleStock: (id: number) => Promise<void>;
+  toggleFeatured: (id: number) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
   clearAllProducts: () => void;
-  importProducts: (products: Product[]) => void;
+  importProducts: (products: Product[]) => Promise<void>;
   resetToDefault: () => void;
-  seedSportsCatalog: () => void;
+  seedSportsCatalog: () => Promise<void>;
   syncWithCloud: () => Promise<void>;
+  initProductSync: () => () => void;
 }
 
 export const useProductStore = create<ProductStore>()(
   persist(
     (set, get) => ({
-      // Initialize with our rich curated sports catalog
       products: defaultProducts,
+      isLoadingCloud: false,
 
-      addProduct: (product) => {
+      addProduct: async (product) => {
         set((state) => ({
           products: [product, ...state.products.filter((p) => p.id !== product.id)],
         }));
         if (isSupabaseConfigured()) {
-          saveProductToSupabase(product).catch((e) =>
-            console.warn('[Supabase] Background save failed:', e)
-          );
+          try {
+            await saveProductToSupabase(product);
+          } catch (e) {
+            console.warn('[Supabase] Background save failed:', e);
+          }
         }
       },
 
-      updateProduct: (id, updatedProduct) => {
+      updateProduct: async (id, updatedProduct) => {
         set((state) => ({
           products: state.products.map((p) => (p.id === id ? updatedProduct : p)),
         }));
         if (isSupabaseConfigured()) {
-          saveProductToSupabase(updatedProduct).catch((e) =>
-            console.warn('[Supabase] Background update failed:', e)
-          );
+          try {
+            await saveProductToSupabase(updatedProduct);
+          } catch (e) {
+            console.warn('[Supabase] Background update failed:', e);
+          }
         }
       },
 
-      toggleStock: (id) => {
+      toggleStock: async (id) => {
         const { products } = get();
         const target = products.find((p) => p.id === id);
         if (target) {
@@ -60,12 +67,12 @@ export const useProductStore = create<ProductStore>()(
             products: state.products.map((p) => (p.id === id ? updated : p)),
           }));
           if (isSupabaseConfigured()) {
-            saveProductToSupabase(updated).catch(() => {});
+            await saveProductToSupabase(updated).catch(() => {});
           }
         }
       },
 
-      toggleFeatured: (id) => {
+      toggleFeatured: async (id) => {
         const { products } = get();
         const target = products.find((p) => p.id === id);
         if (target) {
@@ -74,17 +81,21 @@ export const useProductStore = create<ProductStore>()(
             products: state.products.map((p) => (p.id === id ? updated : p)),
           }));
           if (isSupabaseConfigured()) {
-            saveProductToSupabase(updated).catch(() => {});
+            await saveProductToSupabase(updated).catch(() => {});
           }
         }
       },
 
-      deleteProduct: (id) => {
+      deleteProduct: async (id) => {
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
         }));
         if (isSupabaseConfigured()) {
-          deleteProductFromSupabase(id).catch(() => {});
+          try {
+            await deleteProductFromSupabase(id);
+          } catch (e) {
+            console.warn('[Supabase] Error deleting product from cloud:', e);
+          }
         }
       },
 
@@ -97,12 +108,14 @@ export const useProductStore = create<ProductStore>()(
         }
       },
 
-      importProducts: (newProducts) => {
+      importProducts: async (newProducts) => {
         set((state) => ({
           products: [...newProducts, ...state.products],
         }));
         if (isSupabaseConfigured()) {
-          newProducts.forEach((p) => saveProductToSupabase(p).catch(() => {}));
+          for (const p of newProducts) {
+            await saveProductToSupabase(p).catch(() => {});
+          }
         }
       },
 
@@ -112,30 +125,57 @@ export const useProductStore = create<ProductStore>()(
         }));
       },
 
-      seedSportsCatalog: () => {
+      seedSportsCatalog: async () => {
         set(() => ({
           products: defaultProducts,
         }));
         if (isSupabaseConfigured()) {
-          defaultProducts.forEach((p) => saveProductToSupabase(p).catch(() => {}));
+          for (const p of defaultProducts) {
+            await saveProductToSupabase(p).catch(() => {});
+          }
         }
       },
 
       syncWithCloud: async () => {
         if (!isSupabaseConfigured()) return;
+        set({ isLoadingCloud: true });
         try {
           const cloudProducts = await fetchProductsFromSupabase();
           if (cloudProducts && cloudProducts.length > 0) {
-            set({ products: cloudProducts });
+            set({ products: cloudProducts, isLoadingCloud: false });
+          } else {
+            // First time connection: If Supabase table is empty, seed it automatically
+            const { products } = get();
+            const listToSeed = products.length > 0 ? products : defaultProducts;
+            for (const p of listToSeed) {
+              await saveProductToSupabase(p).catch(() => {});
+            }
+            set({ isLoadingCloud: false });
           }
         } catch (e) {
           console.warn('[Supabase] Error syncing products from cloud:', e);
+          set({ isLoadingCloud: false });
         }
+      },
+
+      initProductSync: () => {
+        // 1. Initial Cloud Sync
+        get().syncWithCloud();
+
+        // 2. Realtime listener: whenever any product is modified/deleted from anywhere, sync immediately
+        if (!isSupabaseConfigured()) return () => {};
+        return subscribeToProductsFromSupabase(async () => {
+          const cloudProducts = await fetchProductsFromSupabase();
+          if (cloudProducts) {
+            set({ products: cloudProducts });
+          }
+        });
       },
     }),
     {
-      name: 'ym-products-storage',
-      version: 2,
+      name: 'ym-products-storage-v3',
+      version: 3,
     }
   )
 );
+
