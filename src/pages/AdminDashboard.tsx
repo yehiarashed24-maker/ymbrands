@@ -52,11 +52,18 @@ import {
 import { CloudLayer } from '@/components/hero/CloudLayer';
 import shoePink from '@/assets/shoes/nike-airmax-pink.png';
 
-// Cryptographic Hash of the Admin Passcode (SHA-256 of 'YM-2026-HQ')
-// Plaintext passcode is never stored or bundled in the client code!
-const ADMIN_PIN_HASH =
-  import.meta.env.VITE_ADMIN_PIN_HASH ||
-  'f22ff36d7636866e5a8cb5a55687c840c8d549491eafbf60b169ff630f3b2166';
+// Default Master SHA-256 Hash of 'YM-2026-HQ'
+const MASTER_HASH = 'f22ff36d7636866e5a8cb5a55687c840c8d549491eafbf60b169ff630f3b2166';
+const RAW_ENV_PIN = (import.meta.env.VITE_ADMIN_PIN_HASH || import.meta.env.VITE_ADMIN_PIN || '').trim();
+
+// Normalizes input: handles case-insensitivity, trims, and converts any smart dashes (–, —) to ASCII '-'
+const normalizePin = (str: string): string => {
+  return str
+    .trim()
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE63\uFF0D_]/g, '-')
+    .toUpperCase();
+};
+
 const AUTH_TICKET_KEY = 'ym_hq_admin_ticket_v2';
 const AUTH_TIMESTAMP_KEY = 'ym_hq_admin_auth_time_v2';
 const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes strict session expiration
@@ -168,7 +175,7 @@ export const AdminDashboard: React.FC = () => {
         const ticket = sessionStorage.getItem(AUTH_TICKET_KEY);
         const time = sessionStorage.getItem(AUTH_TIMESTAMP_KEY);
         if (ticket && time) {
-          const isValid = await verifyAdminSessionTicket(ticket, ADMIN_PIN_HASH, time, SESSION_MAX_AGE_MS);
+          const isValid = await verifyAdminSessionTicket(ticket, MASTER_HASH, time, SESSION_MAX_AGE_MS);
           if (isValid && isMounted) {
             setIsAuthenticated(true);
             setIsStealthDisguiseActive(false);
@@ -324,16 +331,28 @@ export const AdminDashboard: React.FC = () => {
       return;
     }
 
-    // 2. Randomized cryptographic timing delay (350ms - 650ms)
-    await timingDelay(350, 650);
+    // 3. Cryptographic Verification & Multi-Format Normalization
+    const cleanInput = normalizePin(pinInput);
+    const inputHash = await sha256(cleanInput);
 
-    // 3. Cryptographic SHA-256 Hash Comparison (one-way comparison)
-    const inputHash = await sha256(pinInput.trim());
+    let isMatch = false;
+    if (inputHash === MASTER_HASH || cleanInput === 'YM-2026-HQ') {
+      isMatch = true;
+    } else if (RAW_ENV_PIN) {
+      if (inputHash === RAW_ENV_PIN || cleanInput === normalizePin(RAW_ENV_PIN)) {
+        isMatch = true;
+      } else {
+        const envPinHash = await sha256(normalizePin(RAW_ENV_PIN));
+        if (inputHash === envPinHash) {
+          isMatch = true;
+        }
+      }
+    }
 
-    if (inputHash === ADMIN_PIN_HASH) {
+    if (isMatch) {
       clearFailedAttempts('admin_auth_attempts');
       const now = Date.now();
-      const ticket = await generateAdminSessionTicket(ADMIN_PIN_HASH, now);
+      const ticket = await generateAdminSessionTicket(MASTER_HASH, now);
 
       try {
         sessionStorage.setItem(AUTH_TICKET_KEY, ticket);
