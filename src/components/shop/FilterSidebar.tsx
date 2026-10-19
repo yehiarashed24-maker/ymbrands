@@ -25,27 +25,21 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   const categories = [
     'All',
-    'Basketball',
-    'Football',
-    'Running',
-    'Training',
-    'Sneakers',
     'Sportswear',
+    'Sport Shoes',
+    'Sneakers',
     'Accessories',
   ];
   const brands = ['NIKE', 'JORDAN', 'ADIDAS', 'PUMA', 'NEW BALANCE', 'UNDER ARMOUR', 'WILSON'];
-  const genders = ['Men', 'Women', 'Unisex'];
+  const genders = ['Men', 'Women', 'Unisex', 'Kids'];
   const sizes = [38, 39, 40, 41, 42, 43, 44, 45, 46, 'S', 'M', 'L', 'XL', 'XXL'];
 
   const categoryLabels: Record<string, { en: string; ar: string }> = {
-    All: { en: 'All Sports & Drops', ar: 'جميع الأقسام والرياضات' },
-    Basketball: { en: '🏀 Basketball (Basket)', ar: '🏀 كرة السلة (باسكيت)' },
-    Football: { en: '⚽ Football (Soccer)', ar: '⚽ كرة القدم (كورة)' },
-    Running: { en: '🏃 Running & Track', ar: '🏃 الجري والماراثون' },
-    Training: { en: '🏋️ Training & Gym', ar: '🏋️ تمارين وجيم' },
-    Sneakers: { en: '👟 Sneakers & Street', ar: '👟 سنيكرز لايف ستايل' },
-    Sportswear: { en: '👕 Sportswear & Tech', ar: '👕 ملابس وترنجات' },
-    Accessories: { en: '🎒 Bags & Gear', ar: '🎒 حقائب ومعدات' },
+    All: { en: 'All Categories', ar: 'جميع الأقسام' },
+    Sportswear: { en: '👕 Sportswear (Apparel & Tracksuits)', ar: '👕 ملابس وترنجات رياضية' },
+    'Sport Shoes': { en: '⚽ Sport Shoes (Football, Basket, Running)', ar: '⚽ أحذية رياضية (كورة وباسكت وجري)' },
+    Sneakers: { en: '👟 Sneakers (Lifestyle & Classics)', ar: '👟 سنيكرز لايف ستايل' },
+    Accessories: { en: '🎒 Accessories (Bags, Balls, Caps)', ar: '🎒 إكسسوارات ومعدات' },
   };
 
   const toggleBrand = (brand: string) => {

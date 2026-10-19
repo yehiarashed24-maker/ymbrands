@@ -10,15 +10,12 @@ import { useProductStore } from '@/store/productStore';
 
 const mapCategorySlug = (slug?: string): string => {
   if (!slug) return '';
-  const lower = slug.toLowerCase();
+  const lower = slug.toLowerCase().replace(/[-_]/g, ' ').trim();
   if (lower === 'sportswear') return 'Sportswear';
-  if (lower === 'sport-shoes' || lower === 'sportshoes') return 'Football';
-  if (lower === 'football' || lower === 'soccer' || lower === 'koora' || lower === 'kora') return 'Football';
-  if (lower === 'basketball' || lower === 'basket') return 'Basketball';
-  if (lower === 'running' || lower === 'runner' || lower === 'run') return 'Running';
-  if (lower === 'training' || lower === 'gym' || lower === 'fitness') return 'Training';
+  if (lower === 'sport shoes' || lower === 'sportshoes') return 'Sport Shoes';
   if (lower === 'sneakers') return 'Sneakers';
   if (lower === 'accessories') return 'Accessories';
+  if (lower === 'football' || lower === 'basketball' || lower === 'running' || lower === 'training') return 'Sport Shoes';
   return slug;
 };
 
@@ -54,8 +51,12 @@ export const Shop: React.FC = () => {
   );
 
   // Initialize filters from search params or route params
-  const paramCategory = mapCategorySlug(categorySlug);
-  const paramGender = mapGenderSlug(genderSlug);
+  const isDirectGender = ['men', 'women', 'kids'].includes((categorySlug || '').toLowerCase().trim());
+  const effectiveCategorySlug = isDirectGender ? undefined : categorySlug;
+  const effectiveGenderSlug = isDirectGender ? categorySlug : genderSlug;
+
+  const paramCategory = mapCategorySlug(effectiveCategorySlug);
+  const paramGender = mapGenderSlug(effectiveGenderSlug);
 
   const initialCategory = paramCategory || searchParams.get('category') || '';
   const initialGender = paramGender
@@ -77,11 +78,15 @@ export const Shop: React.FC = () => {
 
   // Sync state if URL route params or searchParams change
   useEffect(() => {
-    const cat = mapCategorySlug(categorySlug) || searchParams.get('category') || '';
-    const gen = mapGenderSlug(genderSlug) || searchParams.get('gender');
+    const isDirectGen = ['men', 'women', 'kids'].includes((categorySlug || '').toLowerCase().trim());
+    const effCategory = isDirectGen ? undefined : categorySlug;
+    const effGender = isDirectGen ? categorySlug : genderSlug;
+
+    const cat = mapCategorySlug(effCategory) || searchParams.get('category') || '';
+    const gen = mapGenderSlug(effGender) || searchParams.get('gender');
     const queryParam = searchParams.get('search') || searchParams.get('q') || '';
     
-    if (cat) {
+    if (cat !== undefined) {
       setFilters((prev) => ({ ...prev, category: cat }));
     }
     if (gen) {
@@ -133,21 +138,55 @@ export const Shop: React.FC = () => {
           if (!matches) return false;
         }
 
-        // Category
+        // Category Matching (Exact 4 Website Categories + Disciplines)
         if (filters.category && filters.category !== 'All') {
-          if (p.category !== filters.category) return false;
+          const fCat = filters.category.toLowerCase().replace(/[-_]/g, ' ').trim();
+          const pCat = (p.category || '').toLowerCase().replace(/[-_]/g, ' ').trim();
+
+          let match = false;
+          if (fCat === 'sport shoes') {
+            match =
+              pCat === 'sport shoes' ||
+              pCat === 'sportshoes' ||
+              pCat === 'football' ||
+              pCat === 'basketball' ||
+              pCat === 'running' ||
+              pCat === 'training';
+          } else if (fCat === 'sportswear') {
+            match = pCat === 'sportswear' || pCat === 'apparel' || pCat === 'clothing';
+          } else if (fCat === 'sneakers') {
+            match = pCat === 'sneakers';
+          } else if (fCat === 'accessories') {
+            match = pCat === 'accessories';
+          } else {
+            match = pCat === fCat;
+          }
+
+          if (!match) return false;
         }
+
         // Special 'new' filter
         if (initialFilter === 'new' && !p.isNew) {
           return false;
         }
+
         // Brand
         if (filters.brand.length > 0) {
           if (!filters.brand.includes(p.brand)) return false;
         }
-        // Gender
+
+        // Gender: Unisex products ALWAYS appear in both Men and Women!
         if (filters.gender.length > 0) {
-          if (!filters.gender.includes(p.gender) && p.gender !== 'Unisex') return false;
+          const pGender = (p.gender || '').toLowerCase().trim();
+          const matchesGender = filters.gender.some((g) => {
+            const fg = g.toLowerCase().trim();
+            if (fg === 'men') return pGender === 'men' || pGender === 'unisex';
+            if (fg === 'women') return pGender === 'women' || pGender === 'unisex';
+            if (fg === 'kids') return pGender === 'kids';
+            if (fg === 'unisex') return pGender === 'unisex';
+            return pGender === fg || pGender === 'unisex';
+          });
+          if (!matchesGender) return false;
         }
         // Sizes
         if (filters.sizes.length > 0) {

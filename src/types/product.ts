@@ -1,11 +1,12 @@
 export type ProductCategory = 
+  | 'Sportswear'
+  | 'Sport Shoes'
   | 'Sneakers'
+  | 'Accessories'
   | 'Football'
   | 'Basketball'
   | 'Running'
   | 'Training'
-  | 'Sportswear'
-  | 'Accessories'
   | 'Men'
   | 'Women'
   | 'Streetwear';

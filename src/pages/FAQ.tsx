@@ -119,23 +119,21 @@ export const FAQ: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 md:py-20">
+    <div className="min-h-screen bg-slate-50/70 pt-28 sm:pt-36 pb-24">
       <div className="max-w-4xl mx-auto px-5 sm:px-8">
         
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ym-charcoal/5 border border-ym-charcoal/10 text-xs font-black uppercase tracking-widest text-ym-charcoal mb-4">
-            <HelpCircle className="w-3.5 h-3.5 text-ym-blue" />
-            <span>{language === 'en' ? 'Help Center & FAQ' : 'مركز المساعدة والأسئلة الشائعة'}</span>
-          </div>
-          
-          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display">
+        {/* Top Breadcrumb Bar */}
+        <div className="text-center mb-8">
+          <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 uppercase">
+            YM EGYPT • HELP CENTER & FREQUENTLY ASKED QUESTIONS
+          </span>
+          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display mt-2">
             {language === 'en' ? 'FREQUENTLY ASKED QUESTIONS' : 'الأسئلة الأكثر شيوعاً'}
           </h1>
-          <p className="text-sm sm:text-base text-slate-500 font-medium mt-3 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2.5 max-w-xl mx-auto">
             {language === 'en'
-              ? 'Everything you need to know about authenticity, delivery across Egypt, payment, and special orders.'
-              : 'كل ما تحتاج معرفته عن الأصالة، الشحن داخل محافظات مصر، طرق الدفع، وخدمة توفير الطلبات الخاصة.'}
+              ? 'Everything you need to know about 100% authenticity, delivery inside Egypt, InstaPay, and By-Order service.'
+              : 'كل ما تحتاج معرفته عن الأصالة 100%، مواعيد الشحن داخل مصر، طرق الدفع وإنستاباي، والطلبات الخاصة.'}
           </p>
         </div>
 

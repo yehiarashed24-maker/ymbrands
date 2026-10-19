@@ -72,12 +72,9 @@ const AUTH_TIMESTAMP_KEY = 'ym_hq_admin_auth_time_v2';
 const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes strict session expiration
 
 const ALL_SPORTS_CATEGORIES: { id: ProductCategory; label: string; icon: string }[] = [
-  { id: 'Basketball', label: 'Basketball (كرة السلة / باسكيت)', icon: '🏀' },
-  { id: 'Football', label: 'Football (كرة القدم / كورة)', icon: '⚽' },
-  { id: 'Running', label: 'Running (الجري والماراثون)', icon: '🏃' },
-  { id: 'Training', label: 'Training & Gym (تمارين وجيم)', icon: '🏋️' },
+  { id: 'Sportswear', label: 'Sportswear (ملابس وترنجات رياضية)', icon: '👕' },
+  { id: 'Sport Shoes', label: 'Sport Shoes (أحذية رياضية كورة وباسكت وجري)', icon: '⚽' },
   { id: 'Sneakers', label: 'Sneakers (سنيكرز لايف ستايل)', icon: '👟' },
-  { id: 'Sportswear', label: 'Sportswear (ملابس وترنجات)', icon: '👕' },
   { id: 'Accessories', label: 'Accessories (إكسسوارات ومعدات)', icon: '🎒' },
 ];
 
@@ -404,8 +401,8 @@ export const AdminDashboard: React.FC = () => {
     nameEn: '',
     nameAr: '',
     brand: 'NIKE',
-    category: 'Basketball' as ProductCategory,
-    subCategory: 'Basketball Shoes',
+    category: 'Sportswear' as ProductCategory,
+    subCategory: 'Apparel',
     gender: 'Unisex' as 'Men' | 'Women' | 'Unisex' | 'Kids',
     price: 5900,
     originalPrice: 6500,
@@ -2187,134 +2184,241 @@ export const AdminDashboard: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-slate-200 my-8 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl sm:max-w-3xl w-full shadow-2xl border border-slate-200 my-8 max-h-[92vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                 <div>
-                  <h3 className="text-xl font-black uppercase text-ym-charcoal font-display">
-                    Add New Product Drop
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ym-lime/20 text-ym-charcoal text-[11px] font-black uppercase tracking-wider mb-1">
+                    <span>✨</span>
+                    <span>Official Catalog Drop</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase text-ym-charcoal font-display">
+                    إضافة منتج جديد • Add Product
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">Add Basketball, Football, Running or Streetwear</p>
+                  <p className="text-xs text-slate-500 font-medium">
+                    أدخل بيانات المنتج والصور والفئة المناسبة ليتم نشره فوراً في المتجر والسحابة
+                  </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowAddProductModal(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black font-bold text-xs cursor-pointer"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black font-bold text-sm transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleCreateProduct} className="space-y-4">
+              <form onSubmit={handleCreateProduct} className="space-y-5">
+                {/* Product Name Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Name (English) *</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Product Name (English) *</span>
+                      <span className="text-[10px] text-slate-400 font-mono">EN</span>
+                    </label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Nike Air Jordan 4 Military Black"
                       value={newProd.nameEn}
                       onChange={(e) => setNewProd({ ...newProd, nameEn: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal focus:ring-1 focus:ring-ym-charcoal transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Name (Arabic) *</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>اسم المنتج (بالعربي) *</span>
+                      <span className="text-[10px] text-slate-400 font-mono">AR</span>
+                    </label>
                     <input
                       type="text"
                       required
                       placeholder="مثال: نايكي إير جوردان 4 ميليتاري بلاك"
                       value={newProd.nameAr}
                       onChange={(e) => setNewProd({ ...newProd, nameAr: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal text-right"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal focus:ring-1 focus:ring-ym-charcoal transition-all text-right"
                       dir="rtl"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Brand</label>
+                {/* Brand & Category Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Brand / الماركة *
+                    </label>
                     <select
                       value={newProd.brand}
                       onChange={(e) => setNewProd({ ...newProd, brand: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
                     >
-                      <option value="NIKE">Nike</option>
-                      <option value="JORDAN">Jordan</option>
-                      <option value="ADIDAS">Adidas</option>
-                      <option value="PUMA">Puma</option>
-                      <option value="NEW BALANCE">New Balance</option>
-                      <option value="UNDER ARMOUR">Under Armour</option>
-                      <option value="WILSON">Wilson</option>
-                      <option value="OTHER">Other</option>
+                      <option value="NIKE">Nike (نايكي)</option>
+                      <option value="JORDAN">Jordan (جوردان)</option>
+                      <option value="ADIDAS">Adidas (أديداس)</option>
+                      <option value="PUMA">Puma (بوما)</option>
+                      <option value="NEW BALANCE">New Balance (نيو بالانس)</option>
+                      <option value="UNDER ARMOUR">Under Armour (أندر آرمر)</option>
+                      <option value="WILSON">Wilson (ويلسون)</option>
+                      <option value="OTHER">Other Brand (ماركة أخرى)</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Sport / Category</label>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Website Category / قسم الموقع (الـ ٤ أقسام الرئيسية) *
+                    </label>
                     <select
                       value={newProd.category}
                       onChange={(e) => setNewProd({ ...newProd, category: e.target.value as ProductCategory })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
                     >
                       {ALL_SPORTS_CATEGORIES.map((cat) => (
                         <option key={cat.id} value={cat.id}>
-                          {cat.label}
+                          {cat.icon} {cat.label}
                         </option>
                       ))}
                     </select>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Gender</label>
-                    <select
-                      value={newProd.gender}
-                      onChange={(e) => setNewProd({ ...newProd, gender: e.target.value as any })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    >
-                      <option value="Unisex">Unisex</option>
-                      <option value="Men">Men</option>
-                      <option value="Women">Women</option>
-                      <option value="Kids">Kids</option>
-                    </select>
+                {/* Target Gender Interactive Selector (Unisex feature highlighted) */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-700">
+                      Target Gender / الفئة المستهدفة *
+                    </label>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      حدد الفئة ليظهر المنتج في الأقسام المناسبة
+                    </span>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Price (EGP) *</label>
-                    <input
-                      type="number"
-                      required
-                      min={0}
-                      value={newProd.price}
-                      onChange={(e) => setNewProd({ ...newProd, price: Number(e.target.value) })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: 'Unisex', label: 'Unisex', ar: 'يوني سيكس (مشترك)', icon: '👫', desc: 'يظهر في رجالي وحريمي' },
+                      { id: 'Men', label: 'Men', ar: 'رجالي فقط', icon: '👨', desc: 'قسم الرجال فقط' },
+                      { id: 'Women', label: 'Women', ar: 'حريمي فقط', icon: '👩', desc: 'قسم النساء فقط' },
+                      { id: 'Kids', label: 'Kids', ar: 'أطفال', icon: '🧒', desc: 'قسم الأطفال' },
+                    ].map((g) => {
+                      const isSelected = newProd.gender === g.id;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => setNewProd({ ...newProd, gender: g.id as any })}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-ym-charcoal text-white border-ym-charcoal shadow-sm'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-lg">{g.icon}</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-ym-lime" />}
+                          </div>
+                          <div>
+                            <div className="text-xs font-black">{g.label}</div>
+                            <div className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                              {g.ar}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {newProd.gender === 'Unisex' ? (
+                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-medium leading-relaxed">
+                      <span className="text-sm">💡</span>
+                      <span>
+                        <strong>تأكيد تلقائي:</strong> بما أنك اخترت <span className="font-bold underline">Unisex</span>، هذا المنتج سيظهر تلقائياً في <strong>قسم الرجال (Men)</strong> وأيضاً في <strong>قسم النساء (Women)</strong> في المتجر.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-2 text-[11px] text-slate-500">
+                      <span>ℹ️</span>
+                      <span>هذا المنتج سيظهر فقط عند استعراض قسم: <strong>{newProd.gender}</strong></span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Symmetrical Pricing Row (Current Selling Price + Original Reference Price) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Selling Price (EGP) * سعر البيع</span>
+                      <span className="text-[10px] font-black text-emerald-600">السعر النهائي للعميل</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        placeholder="5900"
+                        value={newProd.price || ''}
+                        onChange={(e) => setNewProd({ ...newProd, price: Number(e.target.value) })}
+                        className="w-full pl-3.5 pr-14 py-2.5 border border-slate-200 rounded-xl text-sm font-black text-ym-charcoal outline-none focus:border-ym-charcoal"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        EGP
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Original Price (EGP) السعر قبل الخصم</span>
+                      <span className="text-[10px] text-slate-400 font-normal">اختياري</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="6500"
+                        value={newProd.originalPrice || ''}
+                        onChange={(e) => setNewProd({ ...newProd, originalPrice: e.target.value ? Number(e.target.value) : 0 })}
+                        className="w-full pl-3.5 pr-14 py-2.5 border border-slate-200 rounded-xl text-sm font-black text-slate-600 outline-none focus:border-ym-charcoal"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        EGP
+                      </span>
+                    </div>
+                    {newProd.originalPrice && newProd.originalPrice > newProd.price ? (
+                      <div className="text-[10px] font-bold text-rose-600 flex items-center gap-1 pt-0.5">
+                        <span>🏷️ خصم: {Math.round(((newProd.originalPrice - newProd.price) / newProd.originalPrice) * 100)}%</span>
+                        <span>(وفر {(newProd.originalPrice - newProd.price).toLocaleString()} EGP للعميل)</span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
+                {/* Multiple Images Upload & Management */}
                 <ProductImageManager
                   images={newProdImages}
                   onChange={setNewProdImages}
-                  label="Product Images / صور المنتج (رفع من اللاب أو روابط)"
+                  label="Product Images / صور المنتج (رفع مباشر من جهازك أو روابط)"
                 />
 
+                {/* Sizes Row */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-slate-700">Available Sizes</label>
+                    <label className="block text-xs font-bold text-slate-700">
+                      Available Sizes / المقاسات المتاحة
+                    </label>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setQuickSizes('shoes')}
-                        className="text-[10px] text-sky-600 hover:underline font-bold"
+                        className="text-[10px] text-sky-600 hover:underline font-bold cursor-pointer"
                       >
-                        + Footwear 40-45
+                        + Footwear (40-45)
                       </button>
                       <button
                         type="button"
                         onClick={() => setQuickSizes('apparel')}
-                        className="text-[10px] text-sky-600 hover:underline font-bold"
+                        className="text-[10px] text-sky-600 hover:underline font-bold cursor-pointer"
                       >
-                        + Apparel S-XXL
+                        + Apparel (S-XXL)
                       </button>
                     </div>
                   </div>
@@ -2327,61 +2431,63 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </div>
 
+                {/* Product Flags */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={newProd.inStock}
                       onChange={(e) => setNewProd({ ...newProd, inStock: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>In Stock</span>
+                    <span>In Stock (متوفر)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={newProd.isByOrder}
                       onChange={(e) => setNewProd({ ...newProd, isByOrder: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>By-Order</span>
+                    <span>By-Order (بالطلب)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={newProd.isFeatured}
                       onChange={(e) => setNewProd({ ...newProd, isFeatured: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>Featured</span>
+                    <span>Featured (مميز)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={newProd.isNew}
                       onChange={(e) => setNewProd({ ...newProd, isNew: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>New Drop</span>
+                    <span>New Drop (جديد)</span>
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-3">
                   <button
                     type="button"
                     onClick={() => setShowAddProductModal(false)}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 hover:bg-slate-50 cursor-pointer"
+                    className="flex-1 py-3.5 rounded-xl border border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
                   >
-                    Cancel
+                    إلغاء • Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 rounded-xl bg-ym-charcoal hover:bg-black text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-md"
+                    className="flex-1 py-3.5 rounded-xl bg-ym-charcoal hover:bg-black text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg hover:shadow-xl transition-all"
                   >
-                    Add Product to Catalog
+                    ✓ إضافة المنتج فوراً للمتجر
                   </button>
                 </div>
               </form>
@@ -2400,117 +2506,240 @@ export const AdminDashboard: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-slate-200 my-8 max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl sm:max-w-3xl w-full shadow-2xl border border-slate-200 my-8 max-h-[92vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
                 <div>
-                  <h3 className="text-xl font-black uppercase text-ym-charcoal font-display">
-                    Edit Product Drop
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 text-[11px] font-black uppercase tracking-wider mb-1">
+                    <span>✏️</span>
+                    <span>Edit Live Product</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase text-ym-charcoal font-display">
+                    تعديل بيانات المنتج • Edit Product
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">Update pricing, category, stock or images</p>
+                  <p className="text-xs text-slate-500 font-medium">
+                    تعديل الأسعار، الصور، الفئة المستهدفة، أو المقاسات للمنتج في السحابة
+                  </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowEditProductModal(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black font-bold text-xs cursor-pointer"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-black font-bold text-sm transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleSaveEditedProduct} className="space-y-4">
+              <form onSubmit={handleSaveEditedProduct} className="space-y-5">
+                {/* Product Name Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Name (English)</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Product Name (English) *</span>
+                      <span className="text-[10px] text-slate-400 font-mono">EN</span>
+                    </label>
                     <input
                       type="text"
                       required
                       value={editForm.nameEn}
                       onChange={(e) => setEditForm({ ...editForm, nameEn: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal focus:ring-1 focus:ring-ym-charcoal transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Name (Arabic)</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>اسم المنتج (بالعربي) *</span>
+                      <span className="text-[10px] text-slate-400 font-mono">AR</span>
+                    </label>
                     <input
                       type="text"
                       required
                       value={editForm.nameAr}
                       onChange={(e) => setEditForm({ ...editForm, nameAr: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal text-right"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-ym-charcoal focus:ring-1 focus:ring-ym-charcoal transition-all text-right"
                       dir="rtl"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Brand</label>
+                {/* Brand & Category Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Brand / الماركة *
+                    </label>
                     <select
                       value={editForm.brand}
                       onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
                     >
-                      <option value="NIKE">Nike</option>
-                      <option value="JORDAN">Jordan</option>
-                      <option value="ADIDAS">Adidas</option>
-                      <option value="PUMA">Puma</option>
-                      <option value="NEW BALANCE">New Balance</option>
-                      <option value="UNDER ARMOUR">Under Armour</option>
-                      <option value="WILSON">Wilson</option>
-                      <option value="OTHER">Other</option>
+                      <option value="NIKE">Nike (نايكي)</option>
+                      <option value="JORDAN">Jordan (جوردان)</option>
+                      <option value="ADIDAS">Adidas (أديداس)</option>
+                      <option value="PUMA">Puma (بوما)</option>
+                      <option value="NEW BALANCE">New Balance (نيو بالانس)</option>
+                      <option value="UNDER ARMOUR">Under Armour (أندر آرمر)</option>
+                      <option value="WILSON">Wilson (ويلسون)</option>
+                      <option value="OTHER">Other Brand (ماركة أخرى)</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Website Category / قسم الموقع (الـ ٤ أقسام الرئيسية) *
+                    </label>
                     <select
                       value={editForm.category}
                       onChange={(e) => setEditForm({ ...editForm, category: e.target.value as ProductCategory })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
                     >
                       {ALL_SPORTS_CATEGORIES.map((cat) => (
                         <option key={cat.id} value={cat.id}>
-                          {cat.label}
+                          {cat.icon} {cat.label}
                         </option>
                       ))}
                     </select>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Gender</label>
-                    <select
-                      value={editForm.gender}
-                      onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as any })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    >
-                      <option value="Unisex">Unisex</option>
-                      <option value="Men">Men</option>
-                      <option value="Women">Women</option>
-                      <option value="Kids">Kids</option>
-                    </select>
+                {/* Target Gender Interactive Selector (Unisex feature highlighted) */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-700">
+                      Target Gender / الفئة المستهدفة *
+                    </label>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      حدد الفئة ليظهر المنتج في الأقسام المناسبة
+                    </span>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Price (EGP)</label>
-                    <input
-                      type="number"
-                      required
-                      min={0}
-                      value={editForm.price}
-                      onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-xs font-bold outline-none"
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: 'Unisex', label: 'Unisex', ar: 'يوني سيكس (مشترك)', icon: '👫', desc: 'يظهر في رجالي وحريمي' },
+                      { id: 'Men', label: 'Men', ar: 'رجالي فقط', icon: '👨', desc: 'قسم الرجال فقط' },
+                      { id: 'Women', label: 'Women', ar: 'حريمي فقط', icon: '👩', desc: 'قسم النساء فقط' },
+                      { id: 'Kids', label: 'Kids', ar: 'أطفال', icon: '🧒', desc: 'قسم الأطفال' },
+                    ].map((g) => {
+                      const isSelected = editForm.gender === g.id;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => setEditForm({ ...editForm, gender: g.id as any })}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-ym-charcoal text-white border-ym-charcoal shadow-sm'
+                              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-lg">{g.icon}</span>
+                            {isSelected && <span className="w-2 h-2 rounded-full bg-ym-lime" />}
+                          </div>
+                          <div>
+                            <div className="text-xs font-black">{g.label}</div>
+                            <div className={`text-[10px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                              {g.ar}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {editForm.gender === 'Unisex' ? (
+                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-medium leading-relaxed">
+                      <span className="text-sm">💡</span>
+                      <span>
+                        <strong>تأكيد تلقائي:</strong> بما أن هذا المنتج محدد كـ <span className="font-bold underline">Unisex</span>، فإنه يظهر تلقائياً في <strong>قسم الرجال (Men)</strong> وأيضاً في <strong>قسم النساء (Women)</strong> في المتجر.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-2 text-[11px] text-slate-500">
+                      <span>ℹ️</span>
+                      <span>هذا المنتج سيظهر فقط عند استعراض قسم: <strong>{editForm.gender}</strong></span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Symmetrical Pricing Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Selling Price (EGP) * سعر البيع</span>
+                      <span className="text-[10px] font-black text-emerald-600">السعر النهائي للعميل</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        value={editForm.price || ''}
+                        onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                        className="w-full pl-3.5 pr-14 py-2.5 border border-slate-200 rounded-xl text-sm font-black text-ym-charcoal outline-none focus:border-ym-charcoal"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        EGP
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Original Price (EGP) السعر قبل الخصم</span>
+                      <span className="text-[10px] text-slate-400 font-normal">اختياري</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        value={editForm.originalPrice || ''}
+                        onChange={(e) => setEditForm({ ...editForm, originalPrice: e.target.value ? Number(e.target.value) : 0 })}
+                        className="w-full pl-3.5 pr-14 py-2.5 border border-slate-200 rounded-xl text-sm font-black text-slate-600 outline-none focus:border-ym-charcoal"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        EGP
+                      </span>
+                    </div>
+                    {editForm.originalPrice && editForm.originalPrice > editForm.price ? (
+                      <div className="text-[10px] font-bold text-rose-600 flex items-center gap-1 pt-0.5">
+                        <span>🏷️ خصم: {Math.round(((editForm.originalPrice - editForm.price) / editForm.originalPrice) * 100)}%</span>
+                        <span>(وفر {(editForm.originalPrice - editForm.price).toLocaleString()} EGP للعميل)</span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
+                {/* Multiple Images Upload & Management */}
                 <ProductImageManager
                   images={editProdImages}
                   onChange={setEditProdImages}
-                  label="Product Images / صور المنتج (رفع من اللاب أو روابط)"
+                  label="Product Images / صور المنتج (رفع مباشر من جهازك أو روابط)"
                 />
 
+                {/* Sizes Row */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Available Sizes (Comma separated)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Available Sizes / المقاسات المتاحة
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, sizes: '40, 41, 42, 43, 44, 45' })}
+                        className="text-[10px] text-sky-600 hover:underline font-bold cursor-pointer"
+                      >
+                        + Footwear (40-45)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditForm({ ...editForm, sizes: 'S, M, L, XL, XXL' })}
+                        className="text-[10px] text-sky-600 hover:underline font-bold cursor-pointer"
+                      >
+                        + Apparel (S-XXL)
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     value={editForm.sizes}
@@ -2519,61 +2748,63 @@ export const AdminDashboard: React.FC = () => {
                   />
                 </div>
 
+                {/* Product Flags */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={editForm.inStock}
                       onChange={(e) => setEditForm({ ...editForm, inStock: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>In Stock</span>
+                    <span>In Stock (متوفر)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={editForm.isByOrder}
                       onChange={(e) => setEditForm({ ...editForm, isByOrder: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>By-Order</span>
+                    <span>By-Order (بالطلب)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={editForm.isFeatured}
                       onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>Featured</span>
+                    <span>Featured (مميز)</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={editForm.isNew}
                       onChange={(e) => setEditForm({ ...editForm, isNew: e.target.checked })}
                       className="w-4 h-4 rounded text-ym-charcoal"
                     />
-                    <span>New Drop</span>
+                    <span>New Drop (جديد)</span>
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-3">
                   <button
                     type="button"
                     onClick={() => setShowEditProductModal(false)}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 hover:bg-slate-50 cursor-pointer"
+                    className="flex-1 py-3.5 rounded-xl border border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"
                   >
-                    Cancel
+                    إلغاء • Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 rounded-xl bg-ym-charcoal hover:bg-black text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-md"
+                    className="flex-1 py-3.5 rounded-xl bg-ym-charcoal hover:bg-black text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg hover:shadow-xl transition-all"
                   >
-                    Save Changes
+                    ✓ حفظ التعديلات في السحابة
                   </button>
                 </div>
               </form>

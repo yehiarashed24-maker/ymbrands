@@ -56,20 +56,19 @@ export const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 md:py-20">
+    <div className="min-h-screen bg-slate-50/70 pt-28 sm:pt-36 pb-24">
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ym-charcoal/5 border border-ym-charcoal/10 text-xs font-black uppercase tracking-widest text-ym-charcoal mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-ym-lime-hover" />
-            <span>{language === 'en' ? 'Get In Touch' : 'تواصل معنا مباشرة'}</span>
-          </div>
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 uppercase">
+            YM EGYPT • GET IN TOUCH & DIRECT SUPPORT
+          </span>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display uppercase">
+          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display uppercase mt-2">
             {language === 'en' ? 'CONTACT US' : 'خدمة العملاء والدعم'}
           </h1>
-          <p className="text-sm sm:text-base text-slate-500 font-medium mt-3">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2.5">
             {language === 'en'
               ? 'Have an inquiry about sizing, orders, or custom sneaker sourcing? We are here to help you every day.'
               : 'هل لديك استفسار عن مقاس، حالة أوردر، أو تبحث عن موديل كوتشي معين؟ فريقنا جاهز لمساعدتك يومياً.'}
