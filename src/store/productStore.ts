@@ -30,7 +30,7 @@ interface ProductStore {
 export const useProductStore = create<ProductStore>()(
   persist(
     (set, get) => ({
-      products: defaultProducts,
+      products: [], // Cloud authoritative: Starts clean, populated strictly by Supabase
       isLoadingCloud: false,
 
       addProduct: async (product) => {
@@ -103,6 +103,7 @@ export const useProductStore = create<ProductStore>()(
       clearAllProducts: async () => {
         set({ products: [] });
         try {
+          localStorage.removeItem('ym-products-storage-v4');
           localStorage.removeItem('ym-products-storage-v3');
         } catch {
           // ignore
@@ -177,8 +178,8 @@ export const useProductStore = create<ProductStore>()(
       },
     }),
     {
-      name: 'ym-products-storage-v3',
-      version: 3,
+      name: 'ym-products-storage-v4',
+      version: 4,
     }
   )
 );
