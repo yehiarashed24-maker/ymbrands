@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useOrderStore, OrderStatus, Order } from '../store/orderStore';
 import { useProductStore } from '../store/productStore';
-import { Product, ProductCategory } from '../types/product';
+import { Product, ProductCategory, ProductSport } from '../types/product';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -76,6 +76,15 @@ const ALL_SPORTS_CATEGORIES: { id: ProductCategory; label: string; icon: string 
   { id: 'Sport Shoes', label: 'Sport Shoes (أحذية رياضية كورة وباسكت وجري)', icon: '⚽' },
   { id: 'Sneakers', label: 'Sneakers (سنيكرز لايف ستايل)', icon: '👟' },
   { id: 'Accessories', label: 'Accessories (إكسسوارات ومعدات)', icon: '🎒' },
+];
+
+const ALL_SPORTS_ACTIVITIES: { id: ProductSport; label: string; icon: string }[] = [
+  { id: 'Basketball', label: 'Basketball (كرة السلة)', icon: '🏀' },
+  { id: 'Football', label: 'Football (كرة القدم)', icon: '⚽' },
+  { id: 'Running', label: 'Running (الجري)', icon: '🏃' },
+  { id: 'Training', label: 'Training & Gym (تمارين وجيم)', icon: '🏋️' },
+  { id: 'Lifestyle', label: 'Lifestyle & Casual (لايف ستايل وسنيكرز)', icon: '👟' },
+  { id: 'General', label: 'General / All (عام لجميع الرياضات)', icon: '⚡' },
 ];
 
 /**
@@ -402,6 +411,7 @@ export const AdminDashboard: React.FC = () => {
     nameAr: '',
     brand: 'NIKE',
     category: 'Sportswear' as ProductCategory,
+    sport: 'Lifestyle' as ProductSport,
     subCategory: 'Apparel',
     gender: 'Unisex' as 'Men' | 'Women' | 'Unisex' | 'Kids',
     price: 5900,
@@ -848,6 +858,7 @@ export const AdminDashboard: React.FC = () => {
         ar: sanitizeString(newProd.nameAr || newProd.nameEn, 100),
       },
       category: newProd.category,
+      sport: newProd.sport || 'General',
       subCategory: newProd.subCategory,
       gender: newProd.gender,
       price: Number(newProd.price),
@@ -899,6 +910,7 @@ export const AdminDashboard: React.FC = () => {
       nameAr: p.name.ar,
       brand: p.brand,
       category: p.category,
+      sport: (p.sport || 'General') as ProductSport,
       subCategory: p.subCategory || '',
       gender: p.gender,
       price: p.price,
@@ -944,6 +956,7 @@ export const AdminDashboard: React.FC = () => {
         ar: sanitizeString(editForm.nameAr || editForm.nameEn, 100),
       },
       category: editForm.category,
+      sport: editForm.sport || 'General',
       subCategory: editForm.subCategory,
       gender: editForm.gender,
       price: Number(editForm.price),
@@ -2242,8 +2255,8 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Brand & Category Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Brand, Category & Sport Row (Nike.com style) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-700">
                       Brand / الماركة *
@@ -2266,7 +2279,7 @@ export const AdminDashboard: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Website Category / قسم الموقع (الـ ٤ أقسام الرئيسية) *
+                      Product Category / قسم المنتج (الـ ٤ أقسام الأساسية) *
                     </label>
                     <select
                       value={newProd.category}
@@ -2276,6 +2289,23 @@ export const AdminDashboard: React.FC = () => {
                       {ALL_SPORTS_CATEGORIES.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                           {cat.icon} {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Sport / نوع الرياضة (فلتر نايكي الداخلي) *
+                    </label>
+                    <select
+                      value={newProd.sport || 'Lifestyle'}
+                      onChange={(e) => setNewProd({ ...newProd, sport: e.target.value as ProductSport })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
+                    >
+                      {ALL_SPORTS_ACTIVITIES.map((sp) => (
+                        <option key={sp.id} value={sp.id}>
+                          {sp.icon} {sp.label}
                         </option>
                       ))}
                     </select>
@@ -2562,8 +2592,8 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Brand & Category Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Brand, Category & Sport Row (Nike.com style) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-700">
                       Brand / الماركة *
@@ -2586,7 +2616,7 @@ export const AdminDashboard: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Website Category / قسم الموقع (الـ ٤ أقسام الرئيسية) *
+                      Product Category / قسم المنتج (الـ ٤ أقسام الأساسية) *
                     </label>
                     <select
                       value={editForm.category}
@@ -2596,6 +2626,23 @@ export const AdminDashboard: React.FC = () => {
                       {ALL_SPORTS_CATEGORIES.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                           {cat.icon} {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Sport / نوع الرياضة (فلتر نايكي الداخلي) *
+                    </label>
+                    <select
+                      value={editForm.sport || 'Lifestyle'}
+                      onChange={(e) => setEditForm({ ...editForm, sport: e.target.value as ProductSport })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-ym-charcoal cursor-pointer"
+                    >
+                      {ALL_SPORTS_ACTIVITIES.map((sp) => (
+                        <option key={sp.id} value={sp.id}>
+                          {sp.icon} {sp.label}
                         </option>
                       ))}
                     </select>

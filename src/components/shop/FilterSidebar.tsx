@@ -110,6 +110,52 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
       </div>
 
+      {/* Sports / Activity Filter (Nike-Style) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-black uppercase tracking-wider text-ym-charcoal">
+            {language === 'ar' ? 'الرياضة / النشاط (مثل نايكي)' : 'Sport / Activity'}
+          </h4>
+          {filters.sport && (
+            <button
+              onClick={() => onFilterChange({ ...filters, sport: '' })}
+              className="text-[10px] text-slate-500 hover:text-black underline font-bold cursor-pointer"
+            >
+              {language === 'ar' ? 'إلغاء' : 'Reset'}
+            </button>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          {[
+            { id: '', label: { en: 'All Activities', ar: 'جميع الرياضات' }, icon: '⚡' },
+            { id: 'Basketball', label: { en: 'Basketball', ar: 'كرة السلة (باسكيت)' }, icon: '🏀' },
+            { id: 'Football', label: { en: 'Football', ar: 'كرة القدم (كورة)' }, icon: '⚽' },
+            { id: 'Running', label: { en: 'Running', ar: 'الجري والماراثون' }, icon: '🏃' },
+            { id: 'Training', label: { en: 'Training & Gym', ar: 'تمارين وجيم' }, icon: '🏋️' },
+            { id: 'Lifestyle', label: { en: 'Lifestyle & Streetwear', ar: 'لايف ستايل وسنيكرز' }, icon: '👟' },
+          ].map((sport) => {
+            const isSelected = filters.sport === sport.id || (!filters.sport && sport.id === '');
+            return (
+              <button
+                key={sport.id}
+                onClick={() => onFilterChange({ ...filters, sport: sport.id })}
+                className={`w-full text-left rtl:text-right py-1.5 px-3 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-between text-xs ${
+                  isSelected
+                    ? 'bg-ym-lime text-black font-black shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-black'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span>{sport.icon}</span>
+                  <span>{sport.label[language]}</span>
+                </span>
+                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-black" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Brand Filters */}
       <div>
         <h4 className="text-xs font-black uppercase tracking-wider text-ym-charcoal mb-3">

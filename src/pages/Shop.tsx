@@ -15,9 +15,10 @@ const mapCategorySlug = (slug?: string): string => {
   if (lower === 'sport shoes' || lower === 'sportshoes') return 'Sport Shoes';
   if (lower === 'sneakers') return 'Sneakers';
   if (lower === 'accessories') return 'Accessories';
-  if (lower === 'football' || lower === 'basketball' || lower === 'running' || lower === 'training') return 'Sport Shoes';
-  return slug;
+  return '';
 };
+
+const SPORTS_DISCIPLINES = ['Basketball', 'Football', 'Running', 'Training', 'Lifestyle'];
 
 const mapGenderSlug = (slug?: string): string => {
   if (!slug) return '';
@@ -58,7 +59,12 @@ export const Shop: React.FC = () => {
   const paramCategory = mapCategorySlug(effectiveCategorySlug);
   const paramGender = mapGenderSlug(effectiveGenderSlug);
 
-  const initialCategory = paramCategory || searchParams.get('category') || '';
+  const rawQueryCategory = searchParams.get('category') || '';
+  const isQuerySport = SPORTS_DISCIPLINES.some((s) => s.toLowerCase() === rawQueryCategory.toLowerCase().trim());
+
+  const initialCategory = paramCategory || (!isQuerySport ? rawQueryCategory : '') || '';
+  const initialSport = searchParams.get('sport') || (isQuerySport ? rawQueryCategory : '') || '';
+
   const initialGender = paramGender
     ? [paramGender]
     : searchParams.get('gender')
@@ -68,6 +74,7 @@ export const Shop: React.FC = () => {
 
   const [filters, setFilters] = useState<FilterState>({
     category: initialCategory,
+    sport: initialSport,
     brand: [],
     gender: initialGender,
     sizes: [],
@@ -82,16 +89,21 @@ export const Shop: React.FC = () => {
     const effCategory = isDirectGen ? undefined : categorySlug;
     const effGender = isDirectGen ? categorySlug : genderSlug;
 
-    const cat = mapCategorySlug(effCategory) || searchParams.get('category') || '';
+    const rawCat = searchParams.get('category') || '';
+    const isSportParam = SPORTS_DISCIPLINES.some((s) => s.toLowerCase() === rawCat.toLowerCase().trim());
+
+    const cat = mapCategorySlug(effCategory) || (!isSportParam ? rawCat : '') || '';
+    const sportVal = searchParams.get('sport') || (isSportParam ? rawCat : '') || '';
     const gen = mapGenderSlug(effGender) || searchParams.get('gender');
     const queryParam = searchParams.get('search') || searchParams.get('q') || '';
     
-    if (cat !== undefined) {
-      setFilters((prev) => ({ ...prev, category: cat }));
-    }
-    if (gen) {
-      setFilters((prev) => ({ ...prev, gender: [gen] }));
-    }
+    setFilters((prev) => ({
+      ...prev,
+      category: cat,
+      sport: sportVal,
+      ...(gen ? { gender: [gen] } : {}),
+    }));
+
     if (queryParam !== searchQuery) {
       setSearchQuery(queryParam);
     }
@@ -100,6 +112,7 @@ export const Shop: React.FC = () => {
   const handleReset = () => {
     setFilters({
       category: '',
+      sport: '',
       brand: [],
       gender: [],
       sizes: [],
@@ -138,22 +151,16 @@ export const Shop: React.FC = () => {
           if (!matches) return false;
         }
 
-        // Category Matching (Exact 4 Website Categories + Disciplines)
+        // 1. Strict Physical Category Matching (اللبس لبس، الجزم جزم، السنيكرز سنيكرز، الإكسسوارات إكسسوارات)
         if (filters.category && filters.category !== 'All') {
           const fCat = filters.category.toLowerCase().replace(/[-_]/g, ' ').trim();
           const pCat = (p.category || '').toLowerCase().replace(/[-_]/g, ' ').trim();
 
           let match = false;
-          if (fCat === 'sport shoes') {
-            match =
-              pCat === 'sport shoes' ||
-              pCat === 'sportshoes' ||
-              pCat === 'football' ||
-              pCat === 'basketball' ||
-              pCat === 'running' ||
-              pCat === 'training';
-          } else if (fCat === 'sportswear') {
+          if (fCat === 'sportswear') {
             match = pCat === 'sportswear' || pCat === 'apparel' || pCat === 'clothing';
+          } else if (fCat === 'sport shoes') {
+            match = pCat === 'sport shoes' || pCat === 'sportshoes';
           } else if (fCat === 'sneakers') {
             match = pCat === 'sneakers';
           } else if (fCat === 'accessories') {
@@ -163,6 +170,23 @@ export const Shop: React.FC = () => {
           }
 
           if (!match) return false;
+        }
+
+        // 2. Sport / Activity Filter Matching (فلتر الرياضة الداخلي مثل موقع نايكي الرسمي)
+        if (filters.sport && filters.sport !== 'All') {
+          const fSport = filters.sport.toLowerCase().trim();
+          const pSport = (p.sport || '').toLowerCase().trim();
+          const pSub = (p.subCategory || '').toLowerCase();
+          const pNameEn = (p.name?.en || '').toLowerCase();
+          const pNameAr = (p.name?.ar || '').toLowerCase();
+
+          const sportMatches =
+            pSport === fSport ||
+            pSub.includes(fSport) ||
+            pNameEn.includes(fSport) ||
+            pNameAr.includes(fSport);
+
+          if (!sportMatches) return false;
         }
 
         // Special 'new' filter
@@ -306,26 +330,55 @@ export const Shop: React.FC = () => {
           </div>
         </div>
 
-        {/* Sports & Collections Quick Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* Level 1: Main Category Bar (اللبس لبس، الجزم جزم، السنيكرز سنيكرز، الإكسسوارات إكسسوارات) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-3 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {[
             { id: '', label: { en: 'All Drops', ar: 'جميع الأقسام' }, icon: '⚡' },
+            { id: 'Sportswear', label: { en: '👕 Sportswear (Clothing)', ar: '👕 ملابس وترنجات' }, icon: '👕' },
+            { id: 'Sport Shoes', label: { en: '⚽ Sport Shoes', ar: '⚽ أحذية رياضية' }, icon: '⚽' },
+            { id: 'Sneakers', label: { en: '👟 Sneakers', ar: '👟 سنيكرز كاجوال' }, icon: '👟' },
+            { id: 'Accessories', label: { en: '🎒 Accessories', ar: '🎒 إكسسوارات ومعدات' }, icon: '🎒' },
+          ].map((cat) => {
+            const isSelected = filters.category === cat.id || (!filters.category && cat.id === '');
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilters((prev) => ({ ...prev, category: cat.id }))}
+                className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  isSelected
+                    ? 'bg-ym-charcoal text-white shadow-sm ring-2 ring-ym-charcoal'
+                    : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-700'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label[language]}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Level 2: Nike-Style Sports / Activity Filter (فلتر الرياضة الداخلي: باسكيت، كورة، جري، تدريب) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap px-2 py-1 rounded-lg bg-slate-100 flex items-center gap-1 shrink-0">
+            <span>🏷️</span>
+            <span>{language === 'ar' ? 'رياضة / استخدام:' : 'Sport / Activity:'}</span>
+          </div>
+          {[
+            { id: '', label: { en: 'All Activities', ar: 'كافة الرياضات' }, icon: '⚡' },
             { id: 'Basketball', label: { en: 'Basketball', ar: 'كرة السلة (باسكيت)' }, icon: '🏀' },
             { id: 'Football', label: { en: 'Football', ar: 'كرة القدم (كورة)' }, icon: '⚽' },
             { id: 'Running', label: { en: 'Running', ar: 'الجري والماراثون' }, icon: '🏃' },
             { id: 'Training', label: { en: 'Training & Gym', ar: 'تمارين وجيم' }, icon: '🏋️' },
-            { id: 'Sneakers', label: { en: 'Sneakers', ar: 'سنيكرز' }, icon: '👟' },
-            { id: 'Sportswear', label: { en: 'Sportswear', ar: 'ملابس وترنجات' }, icon: '👕' },
-            { id: 'Accessories', label: { en: 'Accessories', ar: 'إكسسوارات' }, icon: '🎒' },
+            { id: 'Lifestyle', label: { en: 'Lifestyle', ar: 'لايف ستايل' }, icon: '👟' },
           ].map((sport) => {
-            const isSelected = filters.category === sport.id || (!filters.category && sport.id === '');
+            const isSelected = filters.sport === sport.id || (!filters.sport && sport.id === '');
             return (
               <button
                 key={sport.id}
-                onClick={() => setFilters((prev) => ({ ...prev, category: sport.id }))}
-                className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                onClick={() => setFilters((prev) => ({ ...prev, sport: sport.id }))}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   isSelected
-                    ? 'bg-ym-charcoal text-white shadow-sm ring-2 ring-ym-charcoal'
+                    ? 'bg-ym-lime text-black font-black shadow-xs ring-2 ring-black/20'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
@@ -339,6 +392,7 @@ export const Shop: React.FC = () => {
         {/* Active Filter Chips */}
         {(Boolean(searchQuery.trim()) ||
           filters.category ||
+          filters.sport ||
           filters.brand.length > 0 ||
           filters.gender.length > 0 ||
           filters.sizes.length > 0) && (
@@ -371,11 +425,23 @@ export const Shop: React.FC = () => {
             )}
 
             {filters.category && filters.category !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-ym-charcoal">
-                {filters.category}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold">
+                <span>القسم: {filters.category}</span>
                 <button
-                  onClick={() => setFilters({ ...filters, category: '' })}
-                  className="hover:text-red-500 cursor-pointer"
+                  onClick={() => setFilters((prev) => ({ ...prev, category: '' }))}
+                  className="hover:text-red-400 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {filters.sport && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ym-lime text-black text-xs font-black shadow-xs">
+                <span>الرياضة: {filters.sport}</span>
+                <button
+                  onClick={() => setFilters((prev) => ({ ...prev, sport: '' }))}
+                  className="hover:text-red-600 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>

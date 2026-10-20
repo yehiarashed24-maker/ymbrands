@@ -11,6 +11,14 @@ export type ProductCategory =
   | 'Women'
   | 'Streetwear';
 
+export type ProductSport =
+  | 'Basketball'
+  | 'Football'
+  | 'Running'
+  | 'Training'
+  | 'Lifestyle'
+  | 'General';
+
 export interface ProductHotspot {
   id: string;
   x: number; // percentage 0-100
@@ -34,6 +42,7 @@ export interface Product {
     ar: string;
   };
   category: ProductCategory;
+  sport?: ProductSport;
   subCategory?: string;
   gender: 'Men' | 'Women' | 'Unisex' | 'Kids';
   price: number;
@@ -96,6 +105,7 @@ export interface Testimonial {
 
 export interface FilterState {
   category: string;
+  sport?: string;
   brand: string[];
   gender: string[];
   sizes: (number | string)[];

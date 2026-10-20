@@ -216,7 +216,7 @@ export const CategoriesSection: React.FC = () => {
             ].map((sport) => (
               <button
                 key={sport.id}
-                onClick={() => navigate(`/shop?category=${sport.id}`)}
+                onClick={() => navigate(`/shop?sport=${sport.id}`)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-ym-charcoal hover:text-white text-ym-charcoal text-xs font-black uppercase tracking-wider transition-all border border-slate-200/80 shadow-xs hover:scale-105 cursor-pointer"
               >
                 <span>{sport.icon}</span>
