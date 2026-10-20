@@ -134,19 +134,19 @@ export const Reviews: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pt-28 sm:pt-36 pb-24">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+    <div className="min-h-screen bg-slate-50/60 pt-28 sm:pt-36 pb-24">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8">
         
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 uppercase">
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-slate-400 uppercase">
             YM EGYPT • VERIFIED BUYER FEEDBACK & REVIEWS
           </span>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display uppercase mt-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ym-charcoal tracking-tight font-display uppercase mt-2">
             {language === 'en' ? 'CUSTOMER REVIEWS' : 'ريفيوهات العملاء'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2.5">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
             {language === 'en'
               ? 'Real reviews from verified sneakerheads and athletes across Egypt who trust YM for authentic kicks and sportswear.'
               : 'آراء وتقييمات موثقة من مقتني السنيكرز والرياضيين في كافة محافظات مصر الذين اختاروا YM للأصالة والتميز.'}

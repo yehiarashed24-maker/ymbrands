@@ -119,18 +119,18 @@ export const FAQ: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pt-28 sm:pt-36 pb-24">
-      <div className="max-w-4xl mx-auto px-5 sm:px-8">
+    <div className="min-h-screen bg-slate-50/60 pt-28 sm:pt-36 pb-24">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8">
         
         {/* Top Breadcrumb Bar */}
         <div className="text-center mb-8">
-          <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 uppercase">
+          <span className="text-[10px] sm:text-xs font-bold tracking-widest text-slate-400 uppercase">
             YM EGYPT • HELP CENTER & FREQUENTLY ASKED QUESTIONS
           </span>
-          <h1 className="text-3xl sm:text-5xl font-black text-ym-charcoal tracking-tight font-display mt-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ym-charcoal tracking-tight font-display mt-2">
             {language === 'en' ? 'FREQUENTLY ASKED QUESTIONS' : 'الأسئلة الأكثر شيوعاً'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2.5 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2 max-w-xl mx-auto leading-relaxed">
             {language === 'en'
               ? 'Everything you need to know about 100% authenticity, delivery inside Egypt, InstaPay, and By-Order service.'
               : 'كل ما تحتاج معرفته عن الأصالة 100%، مواعيد الشحن داخل مصر، طرق الدفع وإنستاباي، والطلبات الخاصة.'}

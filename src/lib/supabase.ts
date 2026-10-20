@@ -196,13 +196,17 @@ export const subscribeToOrdersFromSupabase = (onOrdersChange: () => void) => {
 export const saveProductToSupabase = async (product: Product): Promise<boolean> => {
   if (!supabase || !isSupabaseConfigured()) return false;
   try {
+    const encodedSubCategory = product.sport
+      ? `${product.sport} | ${product.subCategory || ''}`
+      : product.subCategory;
+
     const { error } = await supabase.from(PRODUCTS_TABLE).upsert({
       id: product.id,
       slug: product.slug,
       brand: product.brand,
       name: product.name,
       category: product.category,
-      sub_category: product.subCategory,
+      sub_category: encodedSubCategory,
       gender: product.gender,
       price: product.price,
       original_price: product.originalPrice,
@@ -279,31 +283,44 @@ export const fetchProductsFromSupabase = async (): Promise<Product[] | null> => 
 
     if (!data) return [];
 
-    return data.map((row: any) => ({
-      id: Number(row.id),
-      slug: row.slug,
-      brand: row.brand,
-      name: row.name,
-      category: row.category,
-      subCategory: row.sub_category,
-      gender: row.gender,
-      price: Number(row.price),
-      originalPrice: row.original_price ? Number(row.original_price) : undefined,
-      image: row.image,
-      images: row.images || [row.image],
-      sizes: row.sizes || [],
-      colors: row.colors || [],
-      accent: row.accent || '#111111',
-      description: row.description,
-      details: row.details || { en: [], ar: [] },
-      isNew: Boolean(row.is_new),
-      isBestSeller: Boolean(row.is_best_seller),
-      isFeatured: Boolean(row.is_featured),
-      isByOrder: Boolean(row.is_by_order),
-      rating: Number(row.rating || 5.0),
-      reviewCount: Number(row.review_count || 0),
-      inStock: Boolean(row.in_stock),
-    }));
+    return data.map((row: any) => {
+      const rawSub = row.sub_category || '';
+      let sport = undefined;
+      let subCategory = rawSub;
+
+      if (rawSub.includes(' | ')) {
+        const parts = rawSub.split(' | ');
+        sport = parts[0] as any;
+        subCategory = parts.slice(1).join(' | ');
+      }
+
+      return {
+        id: Number(row.id),
+        slug: row.slug,
+        brand: row.brand,
+        name: row.name,
+        category: row.category,
+        sport: sport,
+        subCategory: subCategory,
+        gender: row.gender,
+        price: Number(row.price),
+        originalPrice: row.original_price ? Number(row.original_price) : undefined,
+        image: row.image,
+        images: row.images || [row.image],
+        sizes: row.sizes || [],
+        colors: row.colors || [],
+        accent: row.accent || '#111111',
+        description: row.description,
+        details: row.details || { en: [], ar: [] },
+        isNew: Boolean(row.is_new),
+        isBestSeller: Boolean(row.is_best_seller),
+        isFeatured: Boolean(row.is_featured),
+        isByOrder: Boolean(row.is_by_order),
+        rating: Number(row.rating || 5.0),
+        reviewCount: Number(row.review_count || 0),
+        inStock: Boolean(row.in_stock),
+      };
+    });
   } catch (err) {
     console.warn('[Supabase] Error fetching products:', err);
     return null;

@@ -30,7 +30,7 @@ interface ProductStore {
 export const useProductStore = create<ProductStore>()(
   persist(
     (set, get) => ({
-      products: [], // Cloud authoritative: Starts clean, populated strictly by Supabase
+      products: defaultProducts, // Safe resilient default: Never show blank screens on mobile
       isLoadingCloud: false,
 
       addProduct: async (product) => {
@@ -104,7 +104,6 @@ export const useProductStore = create<ProductStore>()(
         set({ products: [] });
         try {
           localStorage.removeItem('ym-products-storage-v4');
-          localStorage.removeItem('ym-products-storage-v3');
         } catch {
           // ignore
         }
@@ -151,9 +150,16 @@ export const useProductStore = create<ProductStore>()(
         try {
           const cloudProducts = await fetchProductsFromSupabase();
           if (cloudProducts !== null) {
-            // Cloud is authoritative source of truth!
-            // Updates all devices synchronously with exact state of Supabase
-            set({ products: cloudProducts, isLoadingCloud: false });
+            if (cloudProducts.length === 0) {
+              // Supabase table is empty: populate with default authentic products immediately
+              for (const p of defaultProducts) {
+                await saveProductToSupabase(p).catch(() => {});
+              }
+              set({ products: defaultProducts, isLoadingCloud: false });
+            } else {
+              // Cloud is authoritative source of truth for all connected devices
+              set({ products: cloudProducts, isLoadingCloud: false });
+            }
           } else {
             set({ isLoadingCloud: false });
           }
@@ -164,17 +170,40 @@ export const useProductStore = create<ProductStore>()(
       },
 
       initProductSync: () => {
-        // 1. Initial Cloud Sync on app boot
+        // 1. Initial Cloud Sync on boot
         get().syncWithCloud();
 
-        // 2. Realtime listener: whenever any product is modified/deleted from anywhere, sync immediately
-        if (!isSupabaseConfigured()) return () => {};
-        return subscribeToProductsFromSupabase(async () => {
-          const cloudProducts = await fetchProductsFromSupabase();
-          if (cloudProducts !== null) {
-            set({ products: cloudProducts });
+        // 2. Mobile & desktop window focus / visibility change sync
+        const handleSyncTrigger = () => {
+          if (document.visibilityState === 'visible') {
+            get().syncWithCloud();
           }
-        });
+        };
+
+        window.addEventListener('focus', handleSyncTrigger);
+        document.addEventListener('visibilitychange', handleSyncTrigger);
+
+        // 3. Periodic background sync (every 12 seconds) so mobile stays 100% in sync
+        const intervalId = setInterval(() => {
+          get().syncWithCloud();
+        }, 12000);
+
+        // 4. Realtime Supabase listener
+        const unsubscribeRealtime = isSupabaseConfigured()
+          ? subscribeToProductsFromSupabase(async () => {
+              const cloudProducts = await fetchProductsFromSupabase();
+              if (cloudProducts !== null && cloudProducts.length > 0) {
+                set({ products: cloudProducts });
+              }
+            })
+          : () => {};
+
+        return () => {
+          window.removeEventListener('focus', handleSyncTrigger);
+          document.removeEventListener('visibilitychange', handleSyncTrigger);
+          clearInterval(intervalId);
+          unsubscribeRealtime();
+        };
       },
     }),
     {

@@ -1305,15 +1305,18 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Executive Metric Cards */}
+        {/* Executive Metric Cards - Calmer & Harmonized */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="p-5 rounded-3xl bg-ym-charcoal text-white shadow-sm flex flex-col justify-between h-32 relative overflow-hidden">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col justify-between h-32">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Revenue</span>
-              <DollarSign className="w-4 h-4 text-ym-lime" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Revenue</span>
+              <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+                <DollarSign className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <span className="text-2xl sm:text-3xl font-black font-display text-white">
-                {metrics.totalSales.toLocaleString()} <span className="text-xs text-ym-lime">EGP</span>
+              <span className="text-2xl sm:text-3xl font-black font-display text-slate-900">
+                {metrics.totalSales.toLocaleString()} <span className="text-xs font-bold text-slate-500">EGP</span>
               </span>
               <p className="text-[10px] text-slate-400 font-medium mt-0.5">
                 From {orders.filter((o) => o.status !== 'cancelled').length} active orders
@@ -1321,17 +1324,15 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-32">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col justify-between h-32">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pending Queue</span>
-              {metrics.pendingCount > 0 ? (
-                <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping" />
-              ) : (
-                <Clock className="w-4 h-4 text-slate-400" />
-              )}
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Pending Queue</span>
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <span className="text-3xl font-black font-display text-amber-600">
+              <span className="text-2xl sm:text-3xl font-black font-display text-amber-600">
                 {metrics.pendingCount}
               </span>
               <p className="text-[10px] text-slate-400 font-medium mt-0.5">
@@ -1340,13 +1341,15 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-32">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col justify-between h-32">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Live Catalog</span>
-              <ShoppingBag className="w-4 h-4 text-slate-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Live Catalog</span>
+              <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <span className="text-3xl font-black font-display text-ym-charcoal">
+              <span className="text-2xl sm:text-3xl font-black font-display text-slate-900">
                 {products.length}
               </span>
               <p className="text-[10px] text-slate-400 font-medium mt-0.5">
@@ -1355,22 +1358,24 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between h-32">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex flex-col justify-between h-32">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Payments & Sourcing</span>
-              <Wallet className="w-4 h-4 text-slate-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Payments & Sourcing</span>
+              <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+                <Wallet className="w-4 h-4" />
+              </div>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800">
                   InstaPay: {metrics.instapayCount}
                 </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700">
                   COD: {metrics.codCount}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-medium mt-2">
-                {metrics.specialCount} Special import sourcing requests
+              <p className="text-[10px] text-slate-400 font-medium mt-1.5">
+                {metrics.specialCount} Sourcing requests
               </p>
             </div>
           </div>
@@ -1808,12 +1813,17 @@ export const AdminDashboard: React.FC = () => {
 
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
-                  onClick={seedSportsCatalog}
-                  className="px-4 py-2.5 bg-ym-lime hover:bg-ym-lime-hover text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-105"
+                  onClick={async () => {
+                    if (window.confirm('مزامنة الكتالوج الأصلي مع السحابة؟')) {
+                      await seedSportsCatalog();
+                      alert('تمت مزامنة الكتالوج الأصلي بالكامل مع قاعدة البيانات والسحابة!');
+                    }
+                  }}
+                  className="px-3.5 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   title="Reload authentic curated Basketball, Football, Running & Gear catalog"
                 >
-                  <Sparkles className="w-4 h-4 text-black" />
-                  <span>Seed Sports Drops</span>
+                  <Sparkles className="w-3.5 h-3.5 text-ym-lime" />
+                  <span>Sync Catalog</span>
                 </button>
 
                 <button
@@ -1901,11 +1911,14 @@ export const AdminDashboard: React.FC = () => {
                 </p>
                 <div className="flex justify-center gap-3">
                   <button
-                    onClick={seedSportsCatalog}
-                    className="px-6 py-3 bg-ym-lime text-black rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
+                    onClick={async () => {
+                      await seedSportsCatalog();
+                      alert('تمت مزامنة الكتالوج الأصلي بالكامل مع قاعدة البيانات والسحابة!');
+                    }}
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 text-black" />
-                    <span>Seed Sports Catalog</span>
+                    <Sparkles className="w-4 h-4 text-ym-lime" />
+                    <span>Sync Sports Catalog</span>
                   </button>
                   <button
                     onClick={() => {

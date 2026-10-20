@@ -24,18 +24,40 @@ export const sendOrderConfirmationEmail = async (order: Order, customerEmail: st
     return false;
   }
 
+  const itemsList = order.items
+    .map(i => `${i.name} (Size: ${i.size || 'N/A'}, Qty: ${i.quantity || 1}, Price: ${i.price?.toLocaleString()} EGP)`)
+    .join('\n');
+
   const templateParams = {
-    to_email: customerEmail,
+    // Recipient email aliases (supports standard EmailJS recipient variables)
+    email: customerEmail.trim(),
+    user_email: customerEmail.trim(),
+    to_email: customerEmail.trim(),
+    recipient: customerEmail.trim(),
+    reply_to: customerEmail.trim(),
+    customer_email: customerEmail.trim(),
+
+    // Customer details
     to_name: order.customer.name,
+    customer_name: order.customer.name,
+    customer_phone: order.customer.phone || '',
+    phone: order.customer.phone || '',
+
+    // Order specifics
     order_id: order.id,
-    order_date: new Date(order.date).toLocaleDateString(),
+    order_date: new Date(order.date).toLocaleDateString('ar-EG', { dateStyle: 'long' }),
     order_total: order.total ? `${order.total.toLocaleString()} EGP` : 'TBD',
-    shipping_address: order.customer.address || order.customer.city || '',
-    items_html: order.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ')
+    total: order.total ? `${order.total.toLocaleString()} EGP` : 'TBD',
+    payment_method: order.paymentMethod === 'instapay' ? 'InstaPay (إنستاباي)' : 'Cash on Delivery (دفع عند الاستلام)',
+    shipping_address: `${order.customer.city || ''} - ${order.customer.address || ''}`,
+    address: `${order.customer.city || ''} - ${order.customer.address || ''}`,
+    items_html: itemsList,
+    message: `طلب جديد رقم #${order.id} بمبلغ ${order.total?.toLocaleString()} جنيه مصري.\nالمنتجات:\n${itemsList}`,
   };
 
   try {
     await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    console.log('[EmailJS] Confirmation email sent successfully to:', customerEmail);
     return true;
   } catch (error) {
     console.error('[EmailJS] Failed to send confirmation email:', error);
