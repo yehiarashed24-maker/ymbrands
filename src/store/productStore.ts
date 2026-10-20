@@ -30,7 +30,7 @@ interface ProductStore {
 export const useProductStore = create<ProductStore>()(
   persist(
     (set, get) => ({
-      products: defaultProducts, // Safe resilient default: Never show blank screens on mobile
+      products: [], // Completely clean catalog controlled directly by admin
       isLoadingCloud: false,
 
       addProduct: async (product) => {
@@ -103,6 +103,7 @@ export const useProductStore = create<ProductStore>()(
       clearAllProducts: async () => {
         set({ products: [] });
         try {
+          localStorage.removeItem('ym-products-storage-v5');
           localStorage.removeItem('ym-products-storage-v4');
         } catch {
           // ignore
@@ -150,16 +151,8 @@ export const useProductStore = create<ProductStore>()(
         try {
           const cloudProducts = await fetchProductsFromSupabase();
           if (cloudProducts !== null) {
-            if (cloudProducts.length === 0) {
-              // Supabase table is empty: populate with default authentic products immediately
-              for (const p of defaultProducts) {
-                await saveProductToSupabase(p).catch(() => {});
-              }
-              set({ products: defaultProducts, isLoadingCloud: false });
-            } else {
-              // Cloud is authoritative source of truth for all connected devices
-              set({ products: cloudProducts, isLoadingCloud: false });
-            }
+            // Cloud is authoritative source of truth for all connected devices
+            set({ products: cloudProducts, isLoadingCloud: false });
           } else {
             set({ isLoadingCloud: false });
           }
@@ -192,7 +185,7 @@ export const useProductStore = create<ProductStore>()(
         const unsubscribeRealtime = isSupabaseConfigured()
           ? subscribeToProductsFromSupabase(async () => {
               const cloudProducts = await fetchProductsFromSupabase();
-              if (cloudProducts !== null && cloudProducts.length > 0) {
+              if (cloudProducts !== null) {
                 set({ products: cloudProducts });
               }
             })
@@ -207,8 +200,8 @@ export const useProductStore = create<ProductStore>()(
       },
     }),
     {
-      name: 'ym-products-storage-v4',
-      version: 4,
+      name: 'ym-products-storage-v5',
+      version: 5,
     }
   )
 );
