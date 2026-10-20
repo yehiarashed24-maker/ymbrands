@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware';
 import { Product } from '../types/product';
 import { products as defaultProducts } from '../data/products';
 import {
+  apiFetchProducts,
+  apiSaveProduct,
+  apiUpdateProduct,
+  apiDeleteProduct,
+  apiPurgeProducts,
+  apiSeedProducts,
+} from '../lib/api';
+import {
   saveProductToSupabase,
   deleteProductFromSupabase,
   purgeAllProductsFromSupabase,
@@ -37,6 +45,9 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: [product, ...state.products.filter((p) => p.id !== product.id)],
         }));
+        // 1. Primary: Save via Vercel Edge API to MongoDB Atlas (100% accessible on mobile in Egypt)
+        await apiSaveProduct(product).catch(() => {});
+        // 2. Secondary backup: Supabase
         if (isSupabaseConfigured()) {
           try {
             await saveProductToSupabase(product);
@@ -50,6 +61,7 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: state.products.map((p) => (p.id === id ? updatedProduct : p)),
         }));
+        await apiUpdateProduct(updatedProduct).catch(() => {});
         if (isSupabaseConfigured()) {
           try {
             await saveProductToSupabase(updatedProduct);
@@ -67,6 +79,7 @@ export const useProductStore = create<ProductStore>()(
           set((state) => ({
             products: state.products.map((p) => (p.id === id ? updated : p)),
           }));
+          await apiUpdateProduct(updated).catch(() => {});
           if (isSupabaseConfigured()) {
             await saveProductToSupabase(updated).catch(() => {});
           }
@@ -81,6 +94,7 @@ export const useProductStore = create<ProductStore>()(
           set((state) => ({
             products: state.products.map((p) => (p.id === id ? updated : p)),
           }));
+          await apiUpdateProduct(updated).catch(() => {});
           if (isSupabaseConfigured()) {
             await saveProductToSupabase(updated).catch(() => {});
           }
@@ -91,6 +105,7 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
         }));
+        await apiDeleteProduct(id).catch(() => {});
         if (isSupabaseConfigured()) {
           try {
             await deleteProductFromSupabase(id);
@@ -108,6 +123,7 @@ export const useProductStore = create<ProductStore>()(
         } catch {
           // ignore
         }
+        await apiPurgeProducts().catch(() => {});
         if (isSupabaseConfigured()) {
           try {
             await purgeAllProductsFromSupabase();
@@ -121,6 +137,9 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: [...newProducts, ...state.products],
         }));
+        for (const p of newProducts) {
+          await apiSaveProduct(p).catch(() => {});
+        }
         if (isSupabaseConfigured()) {
           for (const p of newProducts) {
             await saveProductToSupabase(p).catch(() => {});
@@ -138,6 +157,7 @@ export const useProductStore = create<ProductStore>()(
         set(() => ({
           products: defaultProducts,
         }));
+        await apiSeedProducts(defaultProducts).catch(() => {});
         if (isSupabaseConfigured()) {
           for (const p of defaultProducts) {
             await saveProductToSupabase(p).catch(() => {});
@@ -146,18 +166,26 @@ export const useProductStore = create<ProductStore>()(
       },
 
       syncWithCloud: async () => {
-        if (!isSupabaseConfigured()) return;
         set({ isLoadingCloud: true });
         try {
-          const cloudProducts = await fetchProductsFromSupabase();
-          if (cloudProducts !== null) {
-            // Cloud is authoritative source of truth for all connected devices
-            set({ products: cloudProducts, isLoadingCloud: false });
-          } else {
-            set({ isLoadingCloud: false });
+          // 1. Primary Cloud: Vercel Edge Serverless API (MongoDB Atlas) - Always open in Egypt
+          const apiProducts = await apiFetchProducts();
+          if (apiProducts !== null) {
+            set({ products: apiProducts, isLoadingCloud: false });
+            return;
           }
+
+          // 2. Secondary fallback: Supabase direct (if on Wi-Fi / VPN)
+          if (isSupabaseConfigured()) {
+            const cloudProducts = await fetchProductsFromSupabase();
+            if (cloudProducts !== null) {
+              set({ products: cloudProducts, isLoadingCloud: false });
+              return;
+            }
+          }
+          set({ isLoadingCloud: false });
         } catch (e) {
-          console.warn('[Supabase] Error syncing products from cloud:', e);
+          console.warn('[Sync] Error syncing products from cloud:', e);
           set({ isLoadingCloud: false });
         }
       },

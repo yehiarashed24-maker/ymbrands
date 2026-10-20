@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import {
+  apiFetchOrders,
+  apiSaveOrder,
+  apiUpdateOrderStatus,
+  apiDeleteOrder,
+  apiPurgeOrders,
+} from '../lib/api';
+import {
   saveOrderToSupabase,
   updateOrderStatusInSupabase,
   deleteOrderFromSupabase,
@@ -107,7 +114,10 @@ export const useOrderStore = create<OrderStore>()(
         // 1. Optimistic UI update
         set((state) => ({ orders: [sanitizedOrder, ...state.orders] }));
 
-        // 2. Save to Supabase (Primary Cloud Database)
+        // 2. Save via Vercel Serverless Edge API to MongoDB Atlas (100% accessible in Egypt)
+        await apiSaveOrder(sanitizedOrder).catch(() => {});
+
+        // 3. Save to Supabase (Secondary Cloud Database)
         if (isSupabaseConfigured()) {
           try {
             await saveOrderToSupabase(sanitizedOrder);
@@ -116,7 +126,7 @@ export const useOrderStore = create<OrderStore>()(
           }
         }
 
-        // 3. Save to Firebase if configured
+        // 4. Save to Firebase if configured
         if (isFirebaseConfigured()) {
           try {
             await setDoc(doc(db, ORDERS_COLLECTION, sanitizedOrder.id), sanitizedOrder);
@@ -130,6 +140,8 @@ export const useOrderStore = create<OrderStore>()(
         set((state) => ({
           orders: state.orders.map((order) => (order.id === id ? { ...order, status } : order)),
         }));
+
+        await apiUpdateOrderStatus(id, status).catch(() => {});
 
         if (isSupabaseConfigured()) {
           try {
@@ -152,6 +164,8 @@ export const useOrderStore = create<OrderStore>()(
         set((state) => ({
           orders: state.orders.filter((order) => order.id !== id),
         }));
+
+        await apiDeleteOrder(id).catch(() => {});
 
         if (isSupabaseConfigured()) {
           try {
@@ -179,6 +193,8 @@ export const useOrderStore = create<OrderStore>()(
           // ignore
         }
 
+        await apiPurgeOrders().catch(() => {});
+
         if (isSupabaseConfigured()) {
           try {
             await purgeAllOrdersFromSupabase();
@@ -198,13 +214,15 @@ export const useOrderStore = create<OrderStore>()(
       },
 
       purgeAllOrders: async () => {
-        // Absolute full purge of all test/fake orders from memory, localStorage, Supabase, and Firestore
+        // Absolute full purge of all test/fake orders from memory, localStorage, MongoDB Atlas, Supabase, and Firestore
         set({ orders: [] });
         try {
           localStorage.removeItem('ym-orders-storage');
         } catch {
           // ignore
         }
+
+        await apiPurgeOrders().catch(() => {});
 
         if (isSupabaseConfigured()) {
           try {
@@ -228,17 +246,30 @@ export const useOrderStore = create<OrderStore>()(
       },
 
       listenToOrders: () => {
-        // 1. Supabase Realtime Listener & Initial Sync
-        if (isSupabaseConfigured()) {
-          const loadInitialOrders = async () => {
+        // 1. Primary: Fetch live orders from MongoDB Atlas via Vercel Edge API
+        const loadInitialOrders = async () => {
+          const apiOrders = await apiFetchOrders();
+          if (apiOrders && apiOrders.length > 0) {
+            set({ orders: apiOrders });
+            return;
+          }
+          if (isSupabaseConfigured()) {
             const remoteOrders = await fetchOrdersFromSupabase();
             if (remoteOrders && remoteOrders.length > 0) {
               set({ orders: remoteOrders });
             }
-          };
+          }
+        };
 
+        loadInitialOrders();
+
+        // Periodic background poll for new orders
+        const pollInterval = setInterval(() => {
           loadInitialOrders();
+        }, 15000);
 
+        // Supabase Realtime Listener (Secondary)
+        if (isSupabaseConfigured()) {
           subscribeToOrdersFromSupabase(async () => {
             const updated = await fetchOrdersFromSupabase();
             if (updated) {
