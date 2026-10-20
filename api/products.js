@@ -14,7 +14,7 @@ try {
 
 const MONGODB_URI = (
   process.env.MONGODB_URI ||
-  'mongodb+srv://yehiarashed2004_db_user:kbXa2ww9NAXVMZY5@cluster0.bimlrnx.mongodb.net/?appName=Cluster0'
+  'mongodb+srv://yehiarashed2004_db_user:yehiaamin111@cluster0.bnlf753.mongodb.net/?appName=Cluster0'
 ).trim();
 
 const DB_NAME = 'ym_brands';
