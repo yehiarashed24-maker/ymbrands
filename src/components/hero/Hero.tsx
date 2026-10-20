@@ -118,7 +118,7 @@ export const Hero: React.FC = () => {
       </div>
 
       {/* 5. The Hero Sneaker & FlightTag (Completely in front of all clouds: z-40) */}
-      <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none pt-12 sm:pt-16">
         <div className="relative w-full max-w-4xl flex justify-center items-center h-full">
           <FloatingSneaker
             product={activeProduct as any}

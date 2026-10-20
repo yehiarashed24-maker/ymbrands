@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 export const FlightTag: React.FC = () => {
   return (
     <motion.div
-      className="absolute z-50 pointer-events-none will-change-transform transform-gpu"
+      className="absolute z-50 pointer-events-none will-change-transform transform-gpu scale-75 sm:scale-90 md:scale-100 origin-top-right"
       // Position it to the right and slightly down from the center (where the shoe is)
       style={{
-        right: '15%',
-        top: '40%',
+        right: '6%',
+        top: '42%',
       }}
       animate={{
         y: [0, -15, 0],
